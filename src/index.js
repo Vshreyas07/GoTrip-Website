@@ -375,48 +375,12 @@ app.use((req, res) => {
 	});
 });
 
-const preferredPort = Number(process.env.PORT) || 3000;
+const PORT = process.env.PORT || 3000;
 
-function listenWithFallback(startPort, maxTries) {
-	const maxPort = startPort + Math.max(0, Number(maxTries) || 0);
-
-	function attempt(port) {
-		const server = app.listen(port, () => {
-			console.log(`GoTrip running on http://localhost:${port}`);
-		});
-
-		server.on("error", (err) => {
-			if (err && err.code === "EADDRINUSE" && port < maxPort) {
-				console.warn(`Port ${port} is in use; trying ${port + 1}...`);
-				try {
-					server.close();
-				} catch (closeErr) {
-					// ignore close error
-				}
-				attempt(port + 1);
-				return;
-			}
-
-			console.error(err);
-			process.exit(1);
-		});
-	}
-
-	attempt(startPort);
-}
-
-// Global safety nets — prevent crash on unhandled promise rejections
-process.on("unhandledRejection", function (reason) {
-	console.error("Unhandled rejection:", reason);
-});
-
-process.on("uncaughtException", function (err) {
-	console.error("Uncaught exception:", err);
-});
-
-// Try preferred port first, then fall back up to 20 ports ahead.
 if (!process.env.VERCEL) {
-	listenWithFallback(preferredPort, 20);
+	app.listen(PORT, () => {
+		console.log(`GoTrip running on port ${PORT}`);
+	});
 }
 
 module.exports = app;
