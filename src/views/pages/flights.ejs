@@ -1,0 +1,451 @@
+<%- include('../partials/head', { title: title + ' — GoTrip', bodyClass: 'flights-page', stylesheets: ['/flights.css'], isFlights: true }) %>
+
+<!-- ── Hero Banner ────────────────────────────────────────────── -->
+<div class="flights-hero">
+  <span class="flights-hero-icon">✈️</span>
+  <h1>Find Your Perfect Flight</h1>
+  <p>Search flights between any two destinations (1-stop via hubs when needed)</p>
+</div>
+
+<!-- ── Filter Bar ─────────────────────────────────────────── -->
+<div class="flights-filter-bar">
+  <form class="flights-filter-inner" method="get" action="/flights">
+    <input type="hidden" name="city" value="<%= city || '' %>" />
+    <div class="ff-field ff-field--trip">
+      <label for="tripType">Trip</label>
+      <select id="tripType" name="tripType">
+        <option value="oneway" <%= (tripType||'oneway')==='oneway' ? 'selected':'' %>>One-way</option>
+        <option value="round"  <%= (tripType||'oneway')==='round'  ? 'selected':'' %>>Round-trip</option>
+      </select>
+    </div>
+
+    <div class="ff-field">
+      <label for="from">From City</label>
+      <input id="from" name="from" value="<%= from %>" placeholder="e.g. Delhi, Mumbai…" list="from-city-list" autocomplete="off" />
+      <datalist id="from-city-list">
+        <% destinations.forEach(function(d){ %><option value="<%= d.name %>"><% }); %>
+      </datalist>
+    </div>
+
+    <div class="ff-field ff-field--swap">
+      <button id="swapBtn" type="button" class="ff-reset-btn ff-swap-btn" aria-label="Swap from and to">⇄</button>
+    </div>
+
+    <div class="ff-field">
+      <label for="to">To Destination</label>
+      <input id="to" name="to" value="<%= to %>" placeholder="e.g. Goa, Ladakh…" list="to-city-list" autocomplete="off" />
+      <datalist id="to-city-list">
+        <% destinations.forEach(function(d){ %><option value="<%= d.name %>"><% }); %>
+      </datalist>
+    </div>
+
+    <div class="ff-field ff-field--date">
+      <label for="departDate">Depart</label>
+      <input id="departDate" name="departDate" type="date" value="<%= departDate || '' %>" />
+    </div>
+
+    <div class="ff-field ff-field--date" id="returnDateWrap">
+      <label for="returnDate">Return</label>
+      <input id="returnDate" name="returnDate" type="date" value="<%= returnDate || '' %>" />
+    </div>
+
+    <div class="ff-field ff-field--sort">
+      <label for="sortBy">Sort by</label>
+      <select id="sortBy" name="sortBy">
+        <option value="price"    <%= sortBy==='price'    ? 'selected':'' %>>Price ↑</option>
+        <option value="duration" <%= sortBy==='duration' ? 'selected':'' %>>Duration</option>
+        <option value="depart"   <%= sortBy==='depart'   ? 'selected':'' %>>Departure</option>
+      </select>
+    </div>
+    <div class="ff-btn-group">
+      <button class="ff-search-btn" type="submit">🔍 Search</button>
+      <a class="ff-reset-btn" href="/flights">✕ Reset</a>
+    </div>
+  </form>
+</div>
+
+<!-- ── Sort / Count bar ───────────────────────────────────── -->
+<div class="flights-sort-bar">
+  <div class="fsr-count">
+    Showing <strong><%= flights.length %></strong> flight<%= flights.length !== 1 ? 's' : '' %>
+    <% if (from || to) { %>
+      <% if (from) { %> from <strong><%= from %></strong><% } %>
+      <% if (to)   { %> to <strong><%= to %></strong><% } %>
+    <% } else if (city) { %>
+      for <strong><%= city %></strong>
+    <% } else { %> across all routes<% } %>
+  </div>
+  <div class="fsr-sort fsr-hint">
+    ☀ Morning = before 12:00 &nbsp;|&nbsp; 🌙 Evening = after 16:00
+  </div>
+</div>
+
+<!-- ── Flight Cards ───────────────────────────────────────── -->
+<div class="flights-grid-wrap">
+  <% if (!flights.length) { %>
+    <div class="flights-empty">
+      <span class="empty-icon">✈️</span>
+      <h3>No flights found</h3>
+      <p>Try a different origin or destination. We cover Delhi, Mumbai, Bengaluru, Hyderabad, Chennai &amp; Kolkata.</p>
+      <a href="/flights" class="ff-search-btn flights-empty__link">View All Flights</a>
+    </div>
+  <% } else { %>
+  <div class="flights-grid" id="flightsGrid">
+    <% flights.forEach(function(f, idx) {
+      var departHour = parseInt((f.depart||'00').split(':')[0], 10);
+      var isMorning  = departHour < 12;
+      var fromAirport = airports[f.from] || {};
+      var toAirport   = airports[f.to]   || {};
+      var fromCode  = f.fromCode || fromAirport.iata || '—';
+      var toCode    = f.toCode   || toAirport.iata   || '—';
+      var stops     = (f.stops != null) ? f.stops : 0;
+      var duration  = f.duration || '—';
+      var flightClass = f.class || 'Economy';
+      var rating = (f.rating != null) ? f.rating : null;
+      var onTime = (f.onTimePct != null) ? f.onTimePct : null;
+      var meta = f.meta || {};
+      var legAir1 = meta.segStrs && meta.segStrs[0] ? meta.segStrs[0].airline : null;
+      var legAir2 = meta.segStrs && meta.segStrs[1] ? meta.segStrs[1].airline : null;
+      var showDualLogos = !!(legAir1 && legAir2 && legAir1 !== legAir2);
+      var logoAir1 = legAir1 || f.airline;
+      var logoAir2 = legAir2;
+      var logoSrc1 = airlineLogos[logoAir1] || '';
+      var logoSrc2 = (showDualLogos && logoAir2) ? (airlineLogos[logoAir2] || '') : '';
+      var code1 = (airlineCodes && airlineCodes[logoAir1]) ? airlineCodes[logoAir1] : String(logoAir1 || '').slice(0, 2).toUpperCase();
+      var code2 = (airlineCodes && airlineCodes[logoAir2]) ? airlineCodes[logoAir2] : String(logoAir2 || '').slice(0, 2).toUpperCase();
+    %>
+    <div class="flight-card" <%- 'style="animation-delay:' + ((idx % 15) * 0.04) + 's"' %>>
+
+        <!-- Airline -->
+        <div class="fc-airline">
+          <% if (showDualLogos) { %>
+            <div class="fc-airline-logos" title="<%= logoAir1 %> + <%= logoAir2 %>">
+              <% if (logoSrc1) { %>
+                <img class="fc-airline-logo"
+                     src="<%= logoSrc1 %>"
+                     alt="<%= logoAir1 %>"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                <div class="fc-airline-logo-fallback" style="display:none">
+                  <%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %>
+                </div>
+              <% } else { %>
+                <div class="fc-airline-logo-fallback">
+                  <%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %>
+                </div>
+              <% } %>
+
+              <% if (logoSrc2) { %>
+                <img class="fc-airline-logo"
+                     src="<%= logoSrc2 %>"
+                     alt="<%= logoAir2 %>"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                <div class="fc-airline-logo-fallback" style="display:none">
+                  <%= String(logoAir2).split(' ').map(function(w){return w[0]}).join('') %>
+                </div>
+              <% } else { %>
+                <div class="fc-airline-logo-fallback">
+                  <%= String(logoAir2).split(' ').map(function(w){return w[0]}).join('') %>
+                </div>
+              <% } %>
+            </div>
+          <% } else { %>
+            <% if (logoSrc1) { %>
+              <img class="fc-airline-logo"
+                   src="<%= logoSrc1 %>"
+                   alt="<%= logoAir1 %>"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+              <div class="fc-airline-logo-fallback" style="display:none">
+                <%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %>
+              </div>
+            <% } else { %>
+              <div class="fc-airline-logo-fallback">
+                <%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %>
+              </div>
+            <% } %>
+          <% } %>
+          <div class="fc-airline-name"><%= f.airline %></div>
+          <div class="fc-flight-id">
+            <% if (showDualLogos) { %>
+              <%= (f.displayFlightNo || (code1 ? code1 : f.id)) %> + <%= (meta.secondaryDisplayFlightNo || code2) %>
+            <% } else { %>
+              <%= f.displayFlightNo || f.id %>
+            <% } %>
+          </div>
+          <div class="fc-badges">
+            <% if (rating) { %>
+              <span class="fc-class-badge fc-class-badge--sm">★ <%= rating.toFixed(1) %></span>
+            <% } %>
+            <% if (onTime) { %>
+              <span class="fc-class-badge fc-class-badge--sm">On-time <%= onTime %>%</span>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Route -->
+        <div class="fc-route">
+          <div class="fc-city">
+            <div class="fc-city-time"><%= f.depart %></div>
+            <div class="fc-city-name"><%= f.from %></div>
+            <div class="fc-city-code"><%= fromCode %></div>
+            <% if (fromAirport.name) { %>
+              <div class="fc-airport-name" title="<%= fromAirport.name %>"><%= fromAirport.name %></div>
+            <% } %>
+            <span class="fc-time-badge fc-time-badge--mt <%= isMorning ? 'morning' : 'evening' %>">
+              <%= isMorning ? '☀ Morning' : '🌙 Evening' %>
+            </span>
+          </div>
+
+          <div class="fc-mid">
+            <div class="fc-duration">⏱ <%= duration %></div>
+            <div class="fc-arc-wrap">
+              <svg class="fc-arc-svg" viewBox="0 0 120 36" fill="none" aria-hidden="true">
+                <path class="fc-arc-path" d="M6 30 Q60 2 114 30" stroke-width="1.5" fill="none"/>
+                <circle class="fc-arc-dot" cx="6" cy="30" r="3"/>
+                <circle class="fc-arc-dot" cx="114" cy="30" r="3"/>
+                <text class="fc-arc-plane" x="60" y="12" text-anchor="middle" font-size="13">✈</text>
+              </svg>
+            </div>
+            <div class="fc-stops">
+              <% if (stops === 0) { %><span class="nonstop">Non-stop</span>
+              <% } else { %>
+                <span class="fc-stop-badge">
+                  <%= stops %> stop<%= stops > 1 ? 's' : '' %>
+                  <% if (f.via) { %> · via <%= f.via %><% } %>
+                  <% if (meta.layoverStr) { %> · layover <%= meta.layoverStr %><% } %>
+                </span>
+                <% if (meta.segStrs && meta.segStrs.length === 2) { %>
+                  <div class="fc-seg-detail">
+                    <div>
+                      <strong><%= meta.segStrs[0].from %></strong> → <strong><%= meta.segStrs[0].to %></strong>
+                      · <%= meta.segStrs[0].duration %>
+                      <% if (meta.segStrs[0].airline) { %> · <%= meta.segStrs[0].airline %><% } %>
+                    </div>
+                    <div>
+                      <strong><%= meta.segStrs[1].from %></strong> → <strong><%= meta.segStrs[1].to %></strong>
+                      · <%= meta.segStrs[1].duration %>
+                      <% if (meta.segStrs[1].airline) { %> · <%= meta.segStrs[1].airline %><% } %>
+                    </div>
+                  </div>
+                <% } %>
+              <% } %>
+            </div>
+          </div>
+
+          <div class="fc-city fc-city--end">
+            <div class="fc-city-time"><%= f.arrive %></div>
+            <div class="fc-city-name"><%= f.to %></div>
+            <div class="fc-city-code"><%= toCode %></div>
+            <% if (toAirport.name) { %>
+              <div class="fc-airport-name fc-airport-name--end" title="<%= toAirport.name %>"><%= toAirport.name %></div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Price & Book -->
+        <div class="fc-cta">
+          <div>
+            <div class="fc-price"><sup>₹</sup><%= f.priceINR.toLocaleString() %></div>
+            <div class="fc-price-note">per person</div>
+            <div class="fc-class-badge fc-class-badge--mt"><%= flightClass %></div>
+          </div>
+          <button class="fc-book-btn js-book"
+                  type="button"
+                  data-kind="Flight"
+                  data-id="<%= f.id %>">
+            Book Now
+          </button>
+        </div>
+
+    </div><!-- /.flight-card -->
+    <% }); %>
+  </div>
+  <% } %>
+</div>
+
+<% if (returnFlights && Array.isArray(returnFlights)) { %>
+  <div class="flights-sort-bar flights-sort-bar--mt">
+    <div class="fsr-count">Return: <strong><%= returnFlights.length %></strong> flight<%= returnFlights.length !== 1 ? 's' : '' %> from <strong><%= to %></strong> to <strong><%= from %></strong></div>
+    <div class="fsr-sort fsr-hint">Same sort applied</div>
+  </div>
+
+  <div class="flights-grid-wrap">
+    <% if (!returnFlights.length) { %>
+      <div class="flights-empty">
+        <span class="empty-icon">✈️</span>
+        <h3>No return flights found</h3>
+        <p>Try different dates or switch to one-way.</p>
+      </div>
+    <% } else { %>
+    <div class="flights-grid" id="returnFlightsGrid">
+      <% returnFlights.forEach(function(f, idx) {
+        var departHour = parseInt((f.depart||'00').split(':')[0], 10);
+        var isMorning  = departHour < 12;
+        var fromAirport = airports[f.from] || {};
+        var toAirport   = airports[f.to]   || {};
+        var fromCode  = f.fromCode || fromAirport.iata || '—';
+        var toCode    = f.toCode   || toAirport.iata   || '—';
+        var stops     = (f.stops != null) ? f.stops : 0;
+        var duration  = f.duration || '—';
+        var flightClass = f.class || 'Economy';
+        var rating = (f.rating != null) ? f.rating : null;
+        var onTime = (f.onTimePct != null) ? f.onTimePct : null;
+        var meta = f.meta || {};
+        var legAir1 = meta.segStrs && meta.segStrs[0] ? meta.segStrs[0].airline : null;
+        var legAir2 = meta.segStrs && meta.segStrs[1] ? meta.segStrs[1].airline : null;
+        var showDualLogos = !!(legAir1 && legAir2 && legAir1 !== legAir2);
+        var logoAir1 = legAir1 || f.airline;
+        var logoAir2 = legAir2;
+        var logoSrc1 = airlineLogos[logoAir1] || '';
+        var logoSrc2 = (showDualLogos && logoAir2) ? (airlineLogos[logoAir2] || '') : '';
+        var code1 = (airlineCodes && airlineCodes[logoAir1]) ? airlineCodes[logoAir1] : String(logoAir1 || '').slice(0, 2).toUpperCase();
+        var code2 = (airlineCodes && airlineCodes[logoAir2]) ? airlineCodes[logoAir2] : String(logoAir2 || '').slice(0, 2).toUpperCase();
+      %>
+      <div class="flight-card" <%- 'style="animation-delay:' + ((idx % 15) * 0.04) + 's"' %>>
+
+        <div class="fc-airline">
+          <% if (showDualLogos) { %>
+            <div class="fc-airline-logos" title="<%= logoAir1 %> + <%= logoAir2 %>">
+              <% if (logoSrc1) { %>
+                <img class="fc-airline-logo"
+                     src="<%= logoSrc1 %>"
+                     alt="<%= logoAir1 %>"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                <div class="fc-airline-logo-fallback" style="display:none">
+                  <%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %>
+                </div>
+              <% } else { %>
+                <div class="fc-airline-logo-fallback">
+                  <%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %>
+                </div>
+              <% } %>
+
+              <% if (logoSrc2) { %>
+                <img class="fc-airline-logo"
+                     src="<%= logoSrc2 %>"
+                     alt="<%= logoAir2 %>"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                <div class="fc-airline-logo-fallback" style="display:none">
+                  <%= String(logoAir2).split(' ').map(function(w){return w[0]}).join('') %>
+                </div>
+              <% } else { %>
+                <div class="fc-airline-logo-fallback">
+                  <%= String(logoAir2).split(' ').map(function(w){return w[0]}).join('') %>
+                </div>
+              <% } %>
+            </div>
+          <% } else { %>
+            <% if (logoSrc1) { %>
+              <img class="fc-airline-logo"
+                   src="<%= logoSrc1 %>"
+                   alt="<%= logoAir1 %>"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+              <div class="fc-airline-logo-fallback" style="display:none">
+                <%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %>
+              </div>
+            <% } else { %>
+              <div class="fc-airline-logo-fallback">
+                <%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %>
+              </div>
+            <% } %>
+          <% } %>
+          <div class="fc-airline-name"><%= f.airline %></div>
+          <div class="fc-flight-id">
+            <% if (showDualLogos) { %>
+              <%= (f.displayFlightNo || (code1 ? code1 : f.id)) %> + <%= (meta.secondaryDisplayFlightNo || code2) %>
+            <% } else { %>
+              <%= f.displayFlightNo || f.id %>
+            <% } %>
+          </div>
+          <div class="fc-badges">
+            <% if (rating) { %>
+              <span class="fc-class-badge fc-class-badge--sm">★ <%= rating.toFixed(1) %></span>
+            <% } %>
+            <% if (onTime) { %>
+              <span class="fc-class-badge fc-class-badge--sm">On-time <%= onTime %>%</span>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="fc-route">
+          <div class="fc-city">
+            <div class="fc-city-time"><%= f.depart %></div>
+            <div class="fc-city-name"><%= f.from %></div>
+            <div class="fc-city-code"><%= fromCode %></div>
+            <% if (fromAirport.name) { %>
+              <div class="fc-airport-name" title="<%= fromAirport.name %>"><%= fromAirport.name %></div>
+            <% } %>
+            <span class="fc-time-badge fc-time-badge--mt <%= isMorning ? 'morning' : 'evening' %>">
+              <%= isMorning ? '☀ Morning' : '🌙 Evening' %>
+            </span>
+          </div>
+
+          <div class="fc-mid">
+            <div class="fc-duration">⏱ <%= duration %></div>
+            <div class="fc-arc-wrap">
+              <svg class="fc-arc-svg" viewBox="0 0 120 36" fill="none" aria-hidden="true">
+                <path class="fc-arc-path" d="M6 30 Q60 2 114 30" stroke-width="1.5" fill="none"/>
+                <circle class="fc-arc-dot" cx="6" cy="30" r="3"/>
+                <circle class="fc-arc-dot" cx="114" cy="30" r="3"/>
+                <text class="fc-arc-plane" x="60" y="12" text-anchor="middle" font-size="13">✈</text>
+              </svg>
+            </div>
+            <div class="fc-stops">
+              <% if (stops === 0) { %><span class="nonstop">Non-stop</span>
+              <% } else { %>
+                <span class="fc-stop-badge">
+                  <%= stops %> stop<%= stops > 1 ? 's' : '' %>
+                  <% if (f.via) { %> · via <%= f.via %><% } %>
+                  <% if (meta.layoverStr) { %> · layover <%= meta.layoverStr %><% } %>
+                </span>
+                <% if (meta.segStrs && meta.segStrs.length === 2) { %>
+                  <div class="fc-seg-detail">
+                    <div>
+                      <strong><%= meta.segStrs[0].from %></strong> → <strong><%= meta.segStrs[0].to %></strong>
+                      · <%= meta.segStrs[0].duration %>
+                      <% if (meta.segStrs[0].airline) { %> · <%= meta.segStrs[0].airline %><% } %>
+                    </div>
+                    <div>
+                      <strong><%= meta.segStrs[1].from %></strong> → <strong><%= meta.segStrs[1].to %></strong>
+                      · <%= meta.segStrs[1].duration %>
+                      <% if (meta.segStrs[1].airline) { %> · <%= meta.segStrs[1].airline %><% } %>
+                    </div>
+                  </div>
+                <% } %>
+              <% } %>
+            </div>
+          </div>
+
+          <div class="fc-city fc-city--end">
+            <div class="fc-city-time"><%= f.arrive %></div>
+            <div class="fc-city-name"><%= f.to %></div>
+            <div class="fc-city-code"><%= toCode %></div>
+            <% if (toAirport.name) { %>
+              <div class="fc-airport-name fc-airport-name--end" title="<%= toAirport.name %>"><%= toAirport.name %></div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="fc-cta">
+          <div>
+            <div class="fc-price"><sup>₹</sup><%= f.priceINR.toLocaleString() %></div>
+            <div class="fc-price-note">per person</div>
+            <div class="fc-class-badge fc-class-badge--mt"><%= flightClass %></div>
+          </div>
+          <button class="fc-book-btn js-book"
+                  type="button"
+                  data-kind="Flight"
+                  data-id="<%= f.id %>">
+            Book Now
+          </button>
+        </div>
+
+      </div>
+      <% }); %>
+    </div>
+    <% } %>
+  </div>
+<% } %>
+
+<script src="/flights-ui.js"></script>
+
+<%- include('../partials/foot', { isFlights: true }) %>

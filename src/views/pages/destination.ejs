@@ -1,0 +1,416 @@
+<%- include('../partials/head', { title: dest.name + ' — GoTrip', stylesheets: ['/flights.css', '/destination.css'] }) %>
+
+<!-- Preload every hero/gallery image at maximum browser priority -->
+<link rel="preload" as="image" href="<%= dest.img %>">
+<% (gallery || []).forEach(function(src) { %>
+  <link rel="preload" as="image" href="<%= src %>">
+<% }); %>
+
+<!-- Hero banner / Gallery Slideshow -->
+<div class="dest-hero" id="destHero">
+  <div class="dest-hero-overlay"></div>
+
+  <!-- Slideshow dots -->
+  <div class="hero-dots">
+    <span class="hero-dot active" data-idx="0"></span>
+    <% (gallery || []).forEach(function(_, gi) { %>
+      <span class="hero-dot" data-idx="<%= gi + 1 %>"></span>
+    <% }); %>
+  </div>
+  <!-- Arrows -->
+  <button class="hero-arrow hero-arrow--prev" id="heroPrev">&#8249;</button>
+  <button class="hero-arrow hero-arrow--next" id="heroNext">&#8250;</button>
+
+  <div class="dest-hero-content">
+    <span class="dest-hero-region"><%= dest.region %> India</span>
+    <h1><%= dest.name %></h1>
+    <p class="dest-hero-tagline"><%= dest.tagline %></p>
+    <div class="dest-hero-meta">
+      <span>🌤 Best time: <%= dest.bestTime %></span>
+      <span>🏷 <%= dest.tags.join(' · ') %></span>
+    </div>
+    <div class="dest-hero-ctas">
+      <a class="btn" href="/itinerary?destination=<%= dest.name %>&days=3">Plan 3-Day Trip</a>
+      <a class="btn btn--ghost" href="/itinerary?destination=<%= dest.name %>&days=7">Plan 7-Day Trip</a>
+      <a class="btn btn--ghost" href="/itinerary?destination=<%= dest.name %>&days=10">Full 10-Day Trip</a>
+      <a class="btn btn--ghost" href="/itinerary?destination=<%= dest.name %>&days=5#from-city" id="plan-custom">Custom Days ↗</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function() {
+    var galleryData = <%- JSON.stringify(gallery || []) %>;
+    var mainImg = '<%= dest.img %>';
+    var slides = [mainImg].concat(galleryData);
+
+    var hero = document.getElementById('destHero');
+    var dots = document.querySelectorAll('.hero-dot');
+
+    // ── Ken Burns timing ─────────────────────────────────────────────────
+    // OVERLAP_MS: how early the NEXT slide starts before the current one
+    // fully fades out — this is the key to eliminating the grey gap.
+    // The two animations run simultaneously during the crossfade window.
+    var HOLD_MS     = 4800;   // how long each image sits fully visible
+    var FADE_MS     = 900;    // fade-in AND fade-out half-duration each
+    var OVERLAP_MS  = 700;    // next slide starts this many ms before current ends
+    // Full animation span for one layer = fade-in + hold + fade-out
+    var ANIM_MS     = FADE_MS + HOLD_MS + FADE_MS;   // 6600 ms
+    // Interval between activations = ANIM_MS minus the overlap window
+    var TICK_MS     = ANIM_MS - OVERLAP_MS;           // 5900 ms
+
+    // ── Build absolutely-stacked layers inside the hero ───────────────────
+    // Remove the old inline background so layers take over
+    hero.style.backgroundImage = 'none';
+
+    // Container that holds all slide layers (sits behind everything else).
+    // Dark background = safety net so even a 1-frame gap is never grey.
+    var slideWrap = document.createElement('div');
+    slideWrap.style.cssText = 'position:absolute;inset:0;z-index:0;overflow:hidden;background:#111;';
+    hero.insertBefore(slideWrap, hero.firstChild);
+
+    // Inject the Ken Burns keyframe + base class once
+    if (!document.getElementById('kb-style')) {
+      var FADE_PCT      = Math.round((FADE_MS  / ANIM_MS) * 100);  // ~14 %
+      var HOLD_END_PCT  = Math.round(((FADE_MS + HOLD_MS) / ANIM_MS) * 100); // ~86 %
+      var st = document.createElement('style');
+      st.id = 'kb-style';
+      st.textContent = [
+        '@keyframes kb-in {',
+        '  0%              { opacity:0; transform:scale(1.10); }',
+        '  ' + FADE_PCT    + '%  { opacity:1; transform:scale(1.10); }',
+        '  ' + HOLD_END_PCT+ '%  { opacity:1; transform:scale(1.00); }',
+        '  100%            { opacity:0; transform:scale(1.00); }',
+        '}',
+        '.kb-slide {',
+        '  position:absolute;inset:0;',
+        '  background-size:cover;background-position:center;',
+        '  opacity:0;',
+        '  will-change:opacity,transform;',
+        '}'
+      ].join('\n');
+      document.head.appendChild(st);
+    }
+
+    // Create one layer per slide
+    var layers = slides.map(function(src) {
+      var el = document.createElement('div');
+      el.className = 'kb-slide';
+      el.style.backgroundImage = "url('" + src + "')";
+      slideWrap.appendChild(el);
+      return el;
+    });
+
+    var cur   = 0;
+    var total = slides.length;
+    var timer;
+
+    function activateSlide(idx) {
+      var layer = layers[idx];
+      var dur   = (ANIM_MS / 1000).toFixed(2) + 's';
+      // Reset the animation cleanly
+      layer.style.animation = 'none';
+      void layer.offsetWidth;                         // force reflow
+      layer.style.animation = 'kb-in ' + dur + ' ease-in-out forwards';
+
+      // Update dots
+      dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
+    }
+
+    function next() {
+      cur = (cur + 1) % total;
+      activateSlide(cur);
+    }
+
+    function goTo(idx) {
+      var target = (idx + total) % total;
+      if (target === cur) return;
+      cur = target;
+      clearInterval(timer);
+      activateSlide(cur);
+      startAuto();
+    }
+
+    function startAuto() {
+      clearInterval(timer);
+      // TICK_MS < ANIM_MS → next slide activates while current is still
+      // visible, creating a seamless crossfade with zero grey gap.
+      timer = setInterval(next, TICK_MS);
+    }
+
+    // Kick off
+    activateSlide(0);
+    if (total > 1) startAuto();
+
+    // Wire up arrows & dots
+    var prevBtn = document.getElementById('heroPrev');
+    var nextBtn = document.getElementById('heroNext');
+    if (prevBtn) prevBtn.addEventListener('click', function() { goTo(cur - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function() { goTo(cur + 1); });
+    dots.forEach(function(d) {
+      d.addEventListener('click', function() { goTo(+this.dataset.idx); });
+    });
+  });
+</script>
+
+<script>
+  /* Scroll-reveal for destination body sections */
+  window.addEventListener('DOMContentLoaded', function () {
+    if (!('IntersectionObserver' in window)) {
+      document.querySelectorAll('.dest-body .section').forEach(function (s) {
+        s.classList.add('sect-visible');
+      });
+      return;
+    }
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('sect-visible');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.dest-body .section, .dest-about').forEach(function (s, i) {
+      s.style.transitionDelay = (i * 0.07) + 's';
+      obs.observe(s);
+    });
+  });
+</script>
+
+<div class="dest-body container">
+
+  <!-- About -->
+  <section class="dest-about">
+    <p><%= dest.desc %></p>
+  </section>
+
+  <!-- How to Get There -->
+  <% if (itinerary.travelOptions && itinerary.travelOptions.length) { %>
+  <section class="section">
+    <h2>🚀 How to Get There</h2>
+    <div class="travel-options__grid">
+      <% itinerary.travelOptions.forEach(function(opt) { %>
+        <div class="topt-card">
+          <div class="topt-mode"><%= opt.mode %></div>
+          <div class="topt-from">From <strong><%= opt.from %></strong></div>
+          <div class="topt-row">
+            <span class="topt-duration">⏱ <%= opt.duration %></span>
+            <span class="topt-price">₹ <%= opt.cheapestINR.toLocaleString() %>+</span>
+          </div>
+          <div class="topt-note"><%= opt.note %></div>
+        </div>
+      <% }); %>
+    </div>
+  </section>
+  <% } %>
+
+  <!-- Sample Itinerary -->
+  <section class="section">
+    <h2>Sample 5-Day Itinerary</h2>
+    <div class="itinerary">
+      <% itinerary.daysPlan.forEach(function(d) { %>
+        <div class="itinerary__day">
+          <h3><%= d.title %></h3>
+          <ul>
+            <% d.items.forEach(function(item) { %>
+              <li><%= item %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% }); %>
+    </div>
+  </section>
+
+  <!-- Flights -->
+  <% if (relatedFlights.length) { %>
+  <section class="section">
+    <h2>✈️ Flights to / from <%= dest.name %></h2>
+    <div class="flights-grid-wrap flights-grid-wrap--flush">
+      <div class="flights-grid">
+        <% relatedFlights.forEach(function(f, idx) {
+          var departHour = parseInt((f.depart||'00').split(':')[0], 10);
+          var isMorning  = departHour < 12;
+          var fromAirport = (airports && airports[f.from]) ? airports[f.from] : {};
+          var toAirport   = (airports && airports[f.to])   ? airports[f.to]   : {};
+          var fromCode  = f.fromCode || fromAirport.iata || '—';
+          var toCode    = f.toCode   || toAirport.iata   || '—';
+          var stops     = (f.stops != null) ? f.stops : 0;
+          var duration  = f.duration || '—';
+          var flightClass = f.class || 'Economy';
+          var rating = (f.rating != null) ? f.rating : null;
+          var onTime = (f.onTimePct != null) ? f.onTimePct : null;
+          var meta = f.meta || {};
+          var legAir1 = meta.segStrs && meta.segStrs[0] ? meta.segStrs[0].airline : null;
+          var legAir2 = meta.segStrs && meta.segStrs[1] ? meta.segStrs[1].airline : null;
+          var showDualLogos = !!(legAir1 && legAir2 && legAir1 !== legAir2);
+          var logoAir1 = legAir1 || f.airline;
+          var logoAir2 = legAir2;
+          var logoSrc1 = (airlineLogos && airlineLogos[logoAir1]) ? airlineLogos[logoAir1] : '';
+          var logoSrc2 = (showDualLogos && logoAir2 && airlineLogos && airlineLogos[logoAir2]) ? airlineLogos[logoAir2] : '';
+          var code1 = (airlineCodes && airlineCodes[logoAir1]) ? airlineCodes[logoAir1] : String(logoAir1 || '').slice(0, 2).toUpperCase();
+          var code2 = (airlineCodes && airlineCodes[logoAir2]) ? airlineCodes[logoAir2] : String(logoAir2 || '').slice(0, 2).toUpperCase();
+        %>
+        <div class="flight-card" style="animation-delay:0s">
+
+          <div class="fc-airline">
+            <% if (showDualLogos) { %>
+              <div class="fc-airline-logos" title="<%= logoAir1 %> + <%= logoAir2 %>">
+                <% if (logoSrc1) { %>
+                  <img class="fc-airline-logo" src="<%= logoSrc1 %>" alt="<%= logoAir1 %>" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                  <div class="fc-airline-logo-fallback" style="display:none"><%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %></div>
+                <% } else { %>
+                  <div class="fc-airline-logo-fallback"><%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %></div>
+                <% } %>
+
+                <% if (logoSrc2) { %>
+                  <img class="fc-airline-logo" src="<%= logoSrc2 %>" alt="<%= logoAir2 %>" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                  <div class="fc-airline-logo-fallback" style="display:none"><%= String(logoAir2).split(' ').map(function(w){return w[0]}).join('') %></div>
+                <% } else { %>
+                  <div class="fc-airline-logo-fallback"><%= String(logoAir2).split(' ').map(function(w){return w[0]}).join('') %></div>
+                <% } %>
+              </div>
+            <% } else { %>
+              <% if (logoSrc1) { %>
+                <img class="fc-airline-logo" src="<%= logoSrc1 %>" alt="<%= logoAir1 %>" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                <div class="fc-airline-logo-fallback" style="display:none"><%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %></div>
+              <% } else { %>
+                <div class="fc-airline-logo-fallback"><%= String(logoAir1).split(' ').map(function(w){return w[0]}).join('') %></div>
+              <% } %>
+            <% } %>
+
+            <div class="fc-airline-name"><%= f.airline %></div>
+            <div class="fc-flight-id">
+              <% if (showDualLogos) { %>
+                <%= (f.displayFlightNo || (code1 ? code1 : f.id)) %> + <%= (meta.secondaryDisplayFlightNo || code2) %>
+              <% } else { %>
+                <%= f.displayFlightNo || f.id %>
+              <% } %>
+            </div>
+
+            <div class="fc-badges">
+              <% if (rating) { %>
+                <span class="fc-class-badge fc-class-badge--sm">★ <%= rating.toFixed(1) %></span>
+              <% } %>
+              <% if (onTime) { %>
+                <span class="fc-class-badge fc-class-badge--sm">On-time <%= onTime %>%</span>
+              <% } %>
+            </div>
+          </div>
+
+          <div class="fc-route">
+            <div class="fc-city">
+              <div class="fc-city-time"><%= f.depart %></div>
+              <div class="fc-city-name"><%= f.from %></div>
+              <div class="fc-city-code"><%= fromCode %></div>
+              <span class="fc-time-badge fc-time-badge--mt <%= isMorning ? 'morning' : 'evening' %>"><%= isMorning ? '☀ Morning' : '🌙 Evening' %></span>
+            </div>
+
+            <div class="fc-mid">
+              <div class="fc-duration">⏱ <%= duration %></div>
+              <div class="fc-arc-wrap">
+              <svg class="fc-arc-svg" viewBox="0 0 120 36" fill="none" aria-hidden="true">
+                <path class="fc-arc-path" d="M6 30 Q60 2 114 30" stroke-width="1.5" fill="none"/>
+                <circle class="fc-arc-dot" cx="6" cy="30" r="3"/>
+                <circle class="fc-arc-dot" cx="114" cy="30" r="3"/>
+                <text class="fc-arc-plane" x="60" y="12" text-anchor="middle" font-size="13">✈</text>
+              </svg>
+            </div>
+              <div class="fc-stops">
+                <% if (stops === 0) { %><span class="nonstop">Non-stop</span>
+                <% } else { %>
+                  <span class="fc-stop-badge">
+                    <%= stops %> stop<%= stops > 1 ? 's' : '' %>
+                    <% if (f.via) { %> · via <%= f.via %><% } %>
+                    <% if (meta.layoverStr) { %> · layover <%= meta.layoverStr %><% } %>
+                  </span>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="fc-city fc-city--end">
+              <div class="fc-city-time"><%= f.arrive %></div>
+              <div class="fc-city-name"><%= f.to %></div>
+              <div class="fc-city-code"><%= toCode %></div>
+            </div>
+          </div>
+
+          <div class="fc-cta">
+            <div>
+              <div class="fc-price"><sup>₹</sup><%= f.priceINR.toLocaleString() %></div>
+              <div class="fc-price-note">per person</div>
+              <div class="fc-class-badge fc-class-badge--mt"><%= flightClass %></div>
+            </div>
+            <button class="fc-book-btn js-book" type="button" data-kind="Flight" data-id="<%= f.id %>">Book Now</button>
+          </div>
+
+        </div>
+        <% }); %>
+      </div>
+    </div>
+    <a href="/flights?city=<%= encodeURIComponent(dest.name) %>" class="dest-more-link">View all flights →</a>
+  </section>
+  <% } %>
+
+  <!-- Hotels -->
+  <% if (relatedHotels.length) { %>
+  <section class="section">
+    <h2>Hotels in <%= dest.name %></h2>
+    <div class="hotel-cards-grid">
+      <% relatedHotels.forEach(function(h) { %>
+        <div class="hotel-card">
+          <div class="hotel-card__top">
+            <div class="hotel-card__name"><%= h.name %></div>
+            <div class="hotel-card__stars">
+              <% var full = Math.floor(h.rating); var half = (h.rating % 1) >= 0.5; %>
+              <% for(var s=0;s<full;s++){ %><span class="hstar hstar--full">★</span><% } %>
+              <% if(half){ %><span class="hstar hstar--half">★</span><% } %>
+              <span class="hotel-card__rating-num"><%= h.rating %></span>
+            </div>
+          </div>
+          <div class="hotel-card__price">
+            <span class="hotel-card__amount">₹&nbsp;<%= h.pricePerNightINR.toLocaleString() %></span>
+            <span class="hotel-card__per">/&nbsp;night</span>
+          </div>
+          <button class="hotel-card__book btn btn--small js-book" data-kind="Hotel" data-id="<%= h.id %>">Book Now</button>
+        </div>
+      <% }); %>
+    </div>
+    <a href="/hotels?city=<%= dest.name %>" class="dest-more-link">View all hotels →</a>
+  </section>
+  <% } %>
+
+  <!-- Buses -->
+  <% if (relatedBuses.length) { %>
+  <section class="section">
+    <h2>Buses to / from <%= dest.name %></h2>
+    <div class="bus-cards-grid">
+      <% relatedBuses.forEach(function(b) { %>
+        <div class="bus-card">
+          <div class="bus-card__operator"><%= b.operator %></div>
+          <div class="bus-card__route">
+            <span class="bus-card__city"><%= b.from %></span>
+            <span class="bus-card__arrow">→</span>
+            <span class="bus-card__city"><%= b.to %></span>
+          </div>
+          <div class="bus-card__times">
+            <span><%= b.depart %></span>
+            <span class="bus-card__dash">–</span>
+            <span><%= b.arrive %></span>
+          </div>
+          <div class="bus-card__bottom">
+            <span class="bus-card__price">₹&nbsp;<%= b.priceINR.toLocaleString() %></span>
+            <button class="btn btn--small js-book" data-kind="Bus" data-id="<%= b.id %>">Book</button>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+    <a href="/buses" class="dest-more-link">View all buses →</a>
+  </section>
+  <% } %>
+
+  <div class="dest-back">
+    <a class="btn btn--ghost" href="/">← Back to Home</a>
+  </div>
+</div>
+
+<%- include('../partials/foot') %>

@@ -1,0 +1,468 @@
+<%- include('../partials/head', { title: 'Payment — GoTrip', stylesheets: ['/payment.css'] }) %>
+
+<section class="section paymentPage">
+  <div class="payment" data-payment-page>
+
+    <!-- ── Hero Strip ─────────────────────────────────────────── -->
+    <div class="payment__hero">
+      <div class="payment__heroGlow" aria-hidden="true"></div>
+
+      <div class="payment__heroInner">
+        <!-- Left: type icon + title -->
+        <div class="payment__heroLeft">
+          <div class="payment__heroIcon" aria-hidden="true">
+            <% if (kind === 'Flight') { %>&#x2708;<%
+            } else if (kind === 'Hotel') { %>🏨<%
+            } else { %>🚌<% } %>
+          </div>
+          <div>
+            <h1 class="payment__heroTitle">Complete Booking</h1>
+            <p class="payment__heroSub">Secure checkout &mdash; your <%= kind.toLowerCase() %> is held for you.</p>
+          </div>
+        </div>
+
+        <!-- Right: meta pills -->
+        <div class="payment__heroPills">
+          <span class="payment__pill payment__pill--type">
+            <span class="payment__pillDot" aria-hidden="true"></span>
+            <%= kind %>
+          </span>
+          <% if (flight && flight.displayFlightNo) { %>
+            <span class="payment__pill"><strong>Flight</strong>&nbsp;<%= flight.displayFlightNo %></span>
+          <% } %>
+          <% if (hotel) { %>
+            <span class="payment__pill"><strong><%= hotel.name %></strong></span>
+          <% } %>
+          <% if (bus) { %>
+            <span class="payment__pill"><strong><%= bus.operator %></strong></span>
+          <% } %>
+          <% if (id) { %>
+            <span class="payment__pill"><strong>Ref&nbsp;</strong><%= id %></span>
+          <% } %>
+          <% if (flight && flight.priceINR != null) { %>
+            <span class="payment__pill payment__pill--price">₹&nbsp;<strong><%= flight.priceINR.toLocaleString() %></strong></span>
+          <% } %>
+          <% if (hotel && hotel.pricePerNightINR != null) { %>
+            <span class="payment__pill payment__pill--price">₹&nbsp;<strong><%= hotel.pricePerNightINR.toLocaleString() %></strong>/night</span>
+          <% } %>
+          <% if (bus && bus.priceINR != null) { %>
+            <span class="payment__pill payment__pill--price">₹&nbsp;<strong><%= bus.priceINR.toLocaleString() %></strong></span>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Step progress -->
+      <div class="payment__steps" aria-label="Booking steps">
+        <div class="payment__step is-done">
+          <span class="payment__stepCircle">✓</span>
+          <span class="payment__stepLabel">Select</span>
+        </div>
+        <div class="payment__stepLine is-done"></div>
+        <div class="payment__step is-active">
+          <span class="payment__stepCircle">2</span>
+          <span class="payment__stepLabel">Pay</span>
+        </div>
+        <div class="payment__stepLine"></div>
+        <div class="payment__step">
+          <span class="payment__stepCircle">3</span>
+          <span class="payment__stepLabel">Confirm</span>
+        </div>
+      </div>
+
+      <!-- Trust badges -->
+      <div class="payment__trust" aria-label="Trust badges">
+        <span class="payment__trustBadge">🔒&nbsp;256-bit SSL</span>
+        <span class="payment__trustBadge">✅&nbsp;PCI&nbsp;DSS&nbsp;Secure</span>
+        <span class="payment__trustBadge">🛡️&nbsp;Zero&nbsp;fraud&nbsp;liability</span>
+        <span class="payment__trustBadge">📞&nbsp;24/7&nbsp;Support</span>
+      </div>
+    </div>
+
+    <!-- ── Main layout ─────────────────────────────────────────── -->
+    <div class="payment__layout">
+
+      <!-- ── Payment form panel ─────────────────────── -->
+      <div class="card payment__panel">
+        <div class="payment__panelHead">
+          <h2 class="payment__panelTitle">Choose payment method</h2>
+          <p class="muted payment__panelSub">Demo checkout &mdash; no real payment is processed.</p>
+        </div>
+
+        <div class="payment__methods" role="tablist" aria-label="Payment methods">
+          <button class="payment__method is-active" type="button" role="tab" aria-selected="true" data-method="upi">
+            <span class="pm-icon">🇳</span> UPI
+          </button>
+          <button class="payment__method" type="button" role="tab" aria-selected="false" data-method="netbanking">
+            <span class="pm-icon">🏦</span> Net Banking
+          </button>
+          <button class="payment__method" type="button" role="tab" aria-selected="false" data-method="card">
+            <span class="pm-icon">💳</span> Cards
+          </button>
+        </div>
+
+        <div class="payment__forms">
+          <!-- UPI -->
+          <form class="payment__form" data-form="upi" autocomplete="off">
+            <div class="payment__formHint">
+              <span class="phint-icon">💡</span>
+              Enter your UPI ID linked to any bank — e.g. <code>yourname@upi</code>
+            </div>
+            <div class="payment__grid">
+              <label class="payment__field">
+                <span class="payment__label">UPI ID</span>
+                <div class="payment__inputWrap">
+                  <span class="payment__inputIcon" aria-hidden="true">🇳</span>
+                  <input name="upi" type="text" placeholder="name@bank" required />
+                </div>
+              </label>
+            </div>
+            <div class="payment__upiApps">
+              <span class="upi-app">GPay</span>
+              <span class="upi-app">PhonePe</span>
+              <span class="upi-app">Paytm</span>
+              <span class="upi-app">BHIM</span>
+            </div>
+            <div class="payment__actions">
+              <button class="btn payment__payBtn" type="submit">🔒&nbsp;Pay Now</button>
+              <a class="btn btn--ghost" href="javascript:history.back()">← Back</a>
+            </div>
+          </form>
+
+          <!-- Net Banking -->
+          <form class="payment__form" data-form="netbanking" hidden autocomplete="off">
+            <div class="payment__formHint">
+              <span class="phint-icon">🏦</span>
+              You’ll be redirected to your bank’s secure portal to authorize.
+            </div>
+            <div class="payment__grid">
+              <label class="payment__field">
+                <span class="payment__label">Select bank</span>
+                <div class="payment__inputWrap">
+                  <span class="payment__inputIcon" aria-hidden="true">🏦</span>
+                  <select name="bank" required>
+                    <option value="" selected disabled>Choose your bank</option>
+                    <option>HDFC Bank</option>
+                    <option>ICICI Bank</option>
+                    <option>State Bank of India</option>
+                    <option>Axis Bank</option>
+                    <option>Kotak Mahindra Bank</option>
+                    <option>Yes Bank</option>
+                    <option>Bank of Baroda</option>
+                    <option>Punjab National Bank</option>
+                  </select>
+                </div>
+              </label>
+            </div>
+            <div class="payment__actions">
+              <button class="btn payment__payBtn" type="submit">🔒&nbsp;Pay Now</button>
+              <a class="btn btn--ghost" href="javascript:history.back()">← Back</a>
+            </div>
+          </form>
+
+          <!-- Card -->
+          <form class="payment__form" data-form="card" hidden autocomplete="off">
+            <div class="payment__formHint">
+              <span class="phint-icon">💳</span>
+              Accepts Visa, Mastercard, Amex &amp; RuPay.
+            </div>
+            <div class="payment__cardWrap">
+              <!-- Live card preview -->
+              <div class="paymentCard" aria-hidden="true">
+                <div class="paymentCard__shine"></div>
+                <div class="paymentCard__top">
+                  <div class="paymentCard__chip">
+                    <div class="chip-line"></div>
+                    <div class="chip-line"></div>
+                    <div class="chip-line"></div>
+                  </div>
+                  <div class="paymentCard__brand" id="cardPreviewBrand">CARD</div>
+                </div>
+                <div class="paymentCard__number" id="cardPreviewNumber">•••• •••• •••• ••••</div>
+                <div class="paymentCard__bottom">
+                  <div>
+                    <div class="paymentCard__label">Card holder</div>
+                    <div class="paymentCard__value" id="cardPreviewName">YOUR NAME</div>
+                  </div>
+                  <div>
+                    <div class="paymentCard__label">Expiry</div>
+                    <div class="paymentCard__value" id="cardPreviewExp">MM/YY</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="payment__grid">
+                <label class="payment__field">
+                  <span class="payment__label">Card number</span>
+                  <div class="payment__inputWrap">
+                    <span class="payment__inputIcon" aria-hidden="true">💳</span>
+                    <input id="cardNumber" name="cardNumber" inputmode="numeric" autocomplete="cc-number"
+                           placeholder="1234 5678 9012 3456" maxlength="19" required />
+                  </div>
+                </label>
+                <label class="payment__field">
+                  <span class="payment__label">Name on card</span>
+                  <div class="payment__inputWrap">
+                    <span class="payment__inputIcon" aria-hidden="true">👤</span>
+                    <input id="cardName" name="cardName" autocomplete="cc-name"
+                           placeholder="Your full name" maxlength="26" required />
+                  </div>
+                </label>
+                <div class="payment__row2">
+                  <label class="payment__field">
+                    <span class="payment__label">Expiry</span>
+                    <input id="cardExp" name="cardExp" inputmode="numeric" autocomplete="cc-exp"
+                           placeholder="MM/YY" maxlength="5" required />
+                  </label>
+                  <label class="payment__field">
+                    <span class="payment__label">CVV <span class="payment__cvvTip" title="3-digit code on the back of your card">ⓘ</span></span>
+                    <input id="cardCvv" name="cardCvv" inputmode="numeric" autocomplete="cc-csc"
+                           placeholder="•••" maxlength="4" required />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="payment__actions">
+              <button class="btn payment__payBtn" type="submit">🔒&nbsp;Pay Now</button>
+              <a class="btn btn--ghost" href="javascript:history.back()">← Back</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── Summary sidebar ───────────────────────── -->
+      <aside class="card payment__summary" aria-label="Booking summary">
+
+        <div class="payment__summaryHeader">
+          <h2 class="payment__summaryTitle">Order Summary</h2>
+          <span class="payment__statusPill" id="paymentStatusPill" aria-live="polite">
+            <span class="payment__statusDot" aria-hidden="true"></span>
+            <span id="paymentStatusText">Pending</span>
+          </span>
+        </div>
+
+        <% if (flight) { %>
+        <!-- Flight summary card inside sidebar -->
+        <div class="payment__flightCard">
+          <div class="pfc-row pfc-route">
+            <div class="pfc-city">
+              <div class="pfc-code"><%= flight.fromCode || '?' %></div>
+              <div class="pfc-name"><%= flight.from %></div>
+            </div>
+            <div class="pfc-mid">
+              <div class="pfc-duration"><%= flight.duration || '' %></div>
+              <div class="pfc-arrow">→————✔</div>
+              <div class="pfc-stops"><%= (flight.stops || 0) === 0 ? 'Non-stop' : flight.stops + ' stop' %></div>
+            </div>
+            <div class="pfc-city pfc-city--right">
+              <div class="pfc-code"><%= flight.toCode || '?' %></div>
+              <div class="pfc-name"><%= flight.to %></div>
+            </div>
+          </div>
+          <div class="pfc-row pfc-details">
+            <span>✈ <%= flight.airline || '' %></span>
+            <span><%= flight.displayFlightNo || '' %></span>
+            <span>📅 <%= flight.depart || '' %></span>
+          </div>
+        </div>
+        <% } %>
+
+        <% if (hotel) { %>
+        <!-- Hotel summary card -->
+        <div class="payment__flightCard">
+          <div class="pfc-row pfc-row--spread">
+            <div>
+              <div class="pfc-hotel-name">🏨 <%= hotel.name %></div>
+              <div class="muted pfc-hotel-city"><%= hotel.city %></div>
+            </div>
+            <div class="pfc-hotel-right">
+              <div class="pfc-hotel-stars"><%= '★'.repeat(Math.min(Math.round(hotel.rating)||0,5)) %></div>
+              <div class="muted pfc-hotel-star-label"><%= Math.round(hotel.rating) %> Star</div>
+            </div>
+          </div>
+          <div class="pfc-row pfc-details pfc-details--mt">
+            <span>📍 <%= hotel.city %></span>
+            <span>⭐ <%= hotel.rating %>/5</span>
+          </div>
+        </div>
+        <% } %>
+
+        <% if (bus) { %>
+        <!-- Bus summary card -->
+        <div class="payment__flightCard">
+          <div class="pfc-row pfc-route">
+            <div class="pfc-city">
+              <div class="pfc-code">🚌</div>
+              <div class="pfc-name"><%= bus.from %></div>
+            </div>
+            <div class="pfc-mid">
+              <div class="pfc-duration"><%= bus.operator %></div>
+              <div class="pfc-arrow">→————✔</div>
+              <div class="pfc-stops">Direct</div>
+            </div>
+            <div class="pfc-city pfc-city--right">
+              <div class="pfc-code">📍</div>
+              <div class="pfc-name"><%= bus.to %></div>
+            </div>
+          </div>
+          <div class="pfc-row pfc-details">
+            <span>🕐 Depart: <%= bus.depart %></span>
+            <span>🕐 Arrive: <%= bus.arrive %></span>
+          </div>
+        </div>
+        <% } %>
+
+        <div class="payment__summaryRows">
+          <div class="payment__summaryRow">
+            <span class="muted">Booking type</span>
+            <strong><%= kind %></strong>
+          </div>
+          <div class="payment__summaryRow">
+            <span class="muted">Reference</span>
+            <strong><%= id || '—' %></strong>
+          </div>
+          <% if (flight) { %>
+            <% if (flight.class) { %>
+            <div class="payment__summaryRow">
+              <span class="muted">Class</span>
+              <strong><%= flight.class %></strong>
+            </div>
+            <% } %>
+            <div class="payment__summaryRow">
+              <span class="muted">Departs</span>
+              <strong><%= flight.depart || '—' %> &middot; <small><%= flight.duration || '' %></small></strong>
+            </div>
+            <div class="payment__summaryRow">
+              <span class="muted">Arrives</span>
+              <strong><%= flight.arrive || '—' %></strong>
+            </div>
+          <% } %>
+          <% if (hotel) { %>
+            <div class="payment__summaryRow">
+              <span class="muted">Hotel</span>
+              <strong><%= hotel.name %></strong>
+            </div>
+            <div class="payment__summaryRow">
+              <span class="muted">Location</span>
+              <strong><%= hotel.city %></strong>
+            </div>
+            <div class="payment__summaryRow">
+              <span class="muted">Rating</span>
+              <strong><%= hotel.rating %>/5 · <%= Math.round(hotel.rating) %>★</strong>
+            </div>
+          <% } %>
+          <% if (bus) { %>
+            <div class="payment__summaryRow">
+              <span class="muted">Operator</span>
+              <strong><%= bus.operator %></strong>
+            </div>
+            <div class="payment__summaryRow">
+              <span class="muted">Route</span>
+              <strong><%= bus.from %> → <%= bus.to %></strong>
+            </div>
+            <div class="payment__summaryRow">
+              <span class="muted">Departure</span>
+              <strong><%= bus.depart %></strong>
+            </div>
+            <div class="payment__summaryRow">
+              <span class="muted">Arrival</span>
+              <strong><%= bus.arrive %></strong>
+            </div>
+          <% } %>
+        </div>
+
+        <% if (flight && flight.priceINR != null) { %>
+        <div class="payment__priceBreakdown">
+          <div class="payment__priceRow">
+            <span>Base fare</span>
+            <span>₹&nbsp;<%= Math.round(flight.priceINR * 0.84).toLocaleString() %></span>
+          </div>
+          <div class="payment__priceRow">
+            <span>Taxes &amp; fees</span>
+            <span>₹&nbsp;<%= Math.round(flight.priceINR * 0.16).toLocaleString() %></span>
+          </div>
+          <div class="payment__priceTotal">
+            <span>Total</span>
+            <span class="payment__priceTotalAmt">₹&nbsp;<%= flight.priceINR.toLocaleString() %></span>
+          </div>
+        </div>
+        <% } %>
+
+        <% if (hotel && hotel.pricePerNightINR != null) { %>
+        <div class="payment__priceBreakdown">
+          <div class="payment__priceRow">
+            <span>Room (1 night)</span>
+            <span>₹&nbsp;<%= Math.round(hotel.pricePerNightINR * 0.82).toLocaleString() %></span>
+          </div>
+          <div class="payment__priceRow">
+            <span>Service charge</span>
+            <span>₹&nbsp;<%= Math.round(hotel.pricePerNightINR * 0.10).toLocaleString() %></span>
+          </div>
+          <div class="payment__priceRow">
+            <span>GST (18%)</span>
+            <span>₹&nbsp;<%= Math.round(hotel.pricePerNightINR * 0.08).toLocaleString() %></span>
+          </div>
+          <div class="payment__priceTotal">
+            <span>Total</span>
+            <span class="payment__priceTotalAmt">₹&nbsp;<%= hotel.pricePerNightINR.toLocaleString() %></span>
+          </div>
+        </div>
+        <% } %>
+
+        <% if (bus && bus.priceINR != null) { %>
+        <div class="payment__priceBreakdown">
+          <div class="payment__priceRow">
+            <span>Ticket fare</span>
+            <span>₹&nbsp;<%= Math.round(bus.priceINR * 0.88).toLocaleString() %></span>
+          </div>
+          <div class="payment__priceRow">
+            <span>Booking fee</span>
+            <span>₹&nbsp;<%= Math.round(bus.priceINR * 0.07).toLocaleString() %></span>
+          </div>
+          <div class="payment__priceRow">
+            <span>GST</span>
+            <span>₹&nbsp;<%= Math.round(bus.priceINR * 0.05).toLocaleString() %></span>
+          </div>
+          <div class="payment__priceTotal">
+            <span>Total</span>
+            <span class="payment__priceTotalAmt">₹&nbsp;<%= bus.priceINR.toLocaleString() %></span>
+          </div>
+        </div>
+        <% } %>
+
+        <p class="muted payment__note" id="paymentNote">Pay to confirm your booking. Your e-ticket will be ready instantly.</p>
+      </aside>
+    </div>
+
+    <!-- ── Success state ───────────────────────────────────────── -->
+    <div class="card payment__success" id="paymentSuccess" hidden>
+      <div class="payment__successIcon" aria-hidden="true">✔</div>
+      <h2 class="payment__successTitle">Booking Confirmed!</h2>
+      <p class="muted">
+        <% if (flight && flight.displayFlightNo) { %>
+          ✈️ Flight <strong><%= flight.displayFlightNo %></strong>
+          (<%= flight.from %> → <%= flight.to %>) is booked.
+        <% } else if (hotel) { %>
+          🏨 Hotel <strong><%= hotel.name %></strong> in <strong><%= hotel.city %></strong> is booked!
+          <br><small>Enjoy your stay at this beautiful <%= Math.round(hotel.rating) %>-star property.</small>
+        <% } else if (bus) { %>
+          🚌 Bus <strong><%= bus.operator %></strong>
+          (<%= bus.from %> → <%= bus.to %>) is booked!
+          <br><small>Departure: <%= bus.depart %> · Arrival: <%= bus.arrive %></small>
+        <% } else { %>
+          Your <strong><%= kind %></strong> booking is confirmed.
+        <% } %>
+      </p>
+      <div class="payment__actions payment__actions--mt">
+        <a class="btn" href="/">🏠 Go to Home</a>
+        <a class="btn btn--ghost" href="javascript:history.back()">← Back</a>
+      </div>
+    </div>
+
+    <div class="confetti" id="confetti" aria-hidden="true"></div>
+  </div>
+</section>
+
+<script src="/payment.js"></script>
+
+<%- include('../partials/foot') %>

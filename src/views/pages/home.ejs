@@ -1,0 +1,333 @@
+<%- include('../partials/head', { title: 'GoTrip — Discover India', bodyClass: 'home-page', hideDefaultHeader: true, stylesheets: ['/home.css'] }) %>
+
+<!-- ── Cinematic Hero ────────────────────────────────────────── -->
+<div class="hero-cinema">
+
+  <!-- Slideshow backgrounds -->
+  <div class="slides">
+    <div class="slide slide-1"></div>
+    <div class="slide slide-2"></div>
+    <div class="slide slide-3"></div>
+    <div class="slide slide-4"></div>
+    <div class="slide slide-5"></div>
+    <div class="slide slide-6"></div>
+  </div>
+
+  <!-- Dark overlay -->
+  <div class="cinema-overlay"></div>
+
+  <!-- Floating particles -->
+  <div class="particles" aria-hidden="true">
+    <span></span><span></span><span></span>
+    <span></span><span></span><span></span>
+  </div>
+
+  <!-- Nav inside hero -->
+  <nav class="cinema-nav">
+    <a class="cinema-brand" href="/"><img src="/img/Gotrip.png" alt="GoTrip" class="cinema-brand-logo" />GoTrip</a>
+    <div class="cinema-links">
+      <a href="/flights">✈ Flights</a>
+      <a href="/hotels">🏨 Hotels</a>
+      <a href="/buses">🚌 Buses</a>
+      <a href="/itinerary">🗺 Itinerary</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle" id="darkToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <span id="darkToggleIcon">🌙</span>
+      </button>
+      <button class="wishlist-nav-btn" id="wishlistNavBtn" aria-label="Saved trips">
+        ❤️ Saved
+        <span class="wishlist-count-badge" id="wishlistCountBadge">0</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero content -->
+  <div class="cinema-content">
+    <div class="cinema-tag">Discover Incredible India</div>
+    <h1 class="cinema-title">
+      <span class="line1">Your Journey</span>
+        <span class="line2"><span class="typewriter" id="typewriterText">Begins Here</span><span class="typewriter-cursor" id="typewriterCursor"></span></span>
+    </h1>
+    <p class="cinema-sub">Explore flights, hotels &amp; buses to India's most iconic destinations</p>
+
+    <!-- Glassmorphism Hero Search -->
+    <div class="hero-search-wrap">
+      <div class="hero-search-glass">
+        <span class="hero-search-icon">🔍</span>
+        <input type="text" id="heroSearchInput" placeholder="Search destinations… e.g. Goa, Ladakh, Kerala" autocomplete="off" />
+        <button class="hero-search-btn" id="heroSearchBtn">Search</button>
+      </div>
+      <div class="hero-search-dropdown" id="heroSearchDropdown"></div>
+    </div>
+
+    <div class="cinema-cta">
+      <a href="/itinerary" class="cta-primary">Plan My Trip</a>
+      <a href="/flights" class="cta-ghost">View Flights</a>
+    </div>
+
+    <!-- Slide dots -->
+    <div class="slide-dots">
+      <span class="dot dot-1 active"></span>
+      <span class="dot dot-2"></span>
+      <span class="dot dot-3"></span>
+      <span class="dot dot-4"></span>
+      <span class="dot dot-5"></span>
+      <span class="dot dot-6"></span>
+    </div>
+  </div>
+
+  <!-- Slide caption -->
+  <div class="slide-caption">
+    <span class="caption-text">Taj Mahal, Agra</span>
+  </div>
+
+  <!-- Scroll cue -->
+  <div class="scroll-cue" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="scroll-arrow"></div>
+  </div>
+
+</div>
+
+<!-- ── Booking Bar ───────────────────────────────────── -->
+<div class="booking-bar-wrap">
+  <div class="booking-bar">
+    <a href="/flights" class="bbar-item">
+      <span class="bbar-icon">✈️</span>
+      <span class="bbar-label">Flights</span>
+    </a>
+    <div class="bbar-divider"></div>
+    <a href="/hotels" class="bbar-item">
+      <span class="bbar-icon">🏨</span>
+      <span class="bbar-label">Hotels</span>
+    </a>
+    <div class="bbar-divider"></div>
+    <a href="/buses" class="bbar-item">
+      <span class="bbar-icon">🚌</span>
+      <span class="bbar-label">Buses</span>
+    </a>
+    <div class="bbar-divider"></div>
+    <a href="/itinerary" class="bbar-item">
+      <span class="bbar-icon">🗺️</span>
+      <span class="bbar-label">Itinerary</span>
+    </a>
+  </div>
+</div>
+
+  <!-- ── Destinations ──────────────────────────────────── -->
+  <div class="home-container">
+
+  <section class="dest-section">
+    <div class="dest-header">
+      <h2>Explore Incredible India</h2>
+      <p>45 handpicked destinations across North, West, East &amp; South India</p>
+    </div>
+
+    <!-- Region Filter Tabs -->
+    <div class="region-tabs">
+      <button class="rtab active" data-region="all">All India</button>
+      <button class="rtab" data-region="North">North India</button>
+      <button class="rtab" data-region="West">West India</button>
+      <button class="rtab" data-region="East">East India</button>
+      <button class="rtab" data-region="South">South India</button>
+    </div>
+
+    <div class="dest-grid" id="dest-grid">
+      <% const destMeta = {
+        /* North India */
+        "Delhi":           { img:"/img/delhi.jpg" },
+        "Agra":            { img:"/img/agra.jpg" },
+        "Jaipur":          { img:"/img/jaipur.jpg" },
+        "Varanasi":        { img:"/img/varanasi.jpg" },
+        "Manali":          { img:"/img/manali.jpg" },
+        "Ladakh":          { img:"/img/ladakh.jpg" },
+        "Amritsar":        { img:"/img/amritsar.jpg" },
+        "Shimla":          { img:"/img/shimla.jpg" },
+        "Rishikesh":       { img:"/img/rishikesh.jpg" },
+        /* West India */
+        "Mumbai":          { img:"/img/mumbai.jpg" },
+        "Goa":             { img:"/img/goa.jpg" },
+        "Udaipur":         { img:"/img/udaipur.jpg" },
+        "Jodhpur":         { img:"/img/jodhpur.jpg" },
+        "Ahmedabad":       { img:"/img/ahmedabad.jpg" },
+        "Rann of Kutch":   { img:"/img/rann-white-desert.jpeg" },
+        "Mount Abu":       { img:"/img/mount-abu-nakki-lake.jpg" },
+        "Pune":            { img:"/img/pune.jpg" },
+        "Lakshadweep Islands": { img:"/img/lakshadweep-bangaram-island.jpg" },
+        "Daman and Diu":       { img:"/img/daman-diu-fort.jpg" },
+        /* East India */
+        "Kolkata":         { img:"/img/kolkata.jpg" },
+        "Darjeeling":      { img:"/img/darjeeling.jpg" },
+        "Assam":           { img:"/img/assam.jpg" },
+        "Meghalaya":                 { img:"/img/meghalaya-root-bridge.jpg" },
+        "Kaziranga":                 { img:"/img/kaziranga.jpg" },
+        "Gangtok":                   { img:"/img/gangtok.jpg" },
+        "Sundarbans":                { img:"/img/sundarbans.jpg" },
+        "Konark":                    { img:"/img/konark.jpg" },
+        "Shillong":                  { img:"/img/shillong.jpg" },
+        "Andaman & Nicobar Islands": { img:"/img/andaman.jpg" },
+        /* South India */
+        "Kerala":          { img:"/img/kerala.jpg" },
+        "Chennai":         { img:"/img/chennai.jpg" },
+        "Bengaluru":       { img:"/img/bengaluru.jpg" },
+        "Hyderabad":       { img:"/img/hyderabad.jpg" },
+        "Mysuru":          { img:"/img/mysuru.jpg" },
+        "Madurai":         { img:"/img/madurai.jpg" },
+        "Hampi":           { img:"/img/hampi.jpg" },
+        "Ooty":            { img:"/img/ooty.jpg" },
+        "Coorg":           { img:"/img/coorg.jpg" },
+        "Pondicherry":     { img:"/img/pondicherry.jpg" },
+        "Tirupati":        { img:"/img/tirupati.jpg" },
+        "Rameshwaram":     { img:"/img/rameshwaram.jpg" },
+        "Munnar":          { img:"/img/munnar.jpg" },
+        "Kanyakumari":     { img:"/img/kanyakumari.jpg" },
+        "Visakhapatnam":   { img:"/img/visakhapatnam.jpg" },
+        "Kodaikanal":      { img:"/img/kodaikanal.jpg" }
+      }; %>
+
+      <% const trending = ["Goa","Ladakh","Kerala","Jaipur","Varanasi","Manali","Udaipur","Andaman & Nicobar Islands","Coorg","Rishikesh"];
+         const hiddenGem = ["Rann of Kutch","Hampi","Kaziranga","Sundarbans","Konark","Assam","Lakshadweep Islands","Shillong","Kodaikanal","Mount Abu"];
+      %>
+      <% destinations.forEach(function(d, i) {
+        var meta = destMeta[d.name] || { img: d.img };
+        var isTrending = trending.indexOf(d.name) !== -1;
+        var isHiddenGem = hiddenGem.indexOf(d.name) !== -1;
+      %>
+        <!-- Skeleton loader placeholder -->
+        <div class="dest-card-skeleton" id="skel-<%= d.id %>"></div>
+
+        <a class="dest-card flip-card"
+           href="/destination/<%= d.id %>"
+           data-region="<%= d.region %>"
+           data-name="<%= d.name %>"
+           data-id="<%= d.id %>"
+           <%- 'style="animation-delay:' + ((i % 10) * 0.06) + 's"' %>>
+
+          <div class="flip-card-inner">
+          <!-- Front -->
+          <div class="flip-front">
+            <div class="dest-img" style="background-image:url('<%= meta.img %>')"></div>
+            <% if(isTrending){ %><div class="dest-badge badge-trending">🔥 Trending</div><% } %>
+            <% if(isHiddenGem){ %><div class="dest-badge badge-gem">💎 Hidden Gem</div><% } %>
+            <div class="dest-region-badge"><%= d.region %></div>
+            <div class="dest-info">
+              <h3><%= d.name %></h3>
+              <span><%= d.tagline %></span>
+            </div>
+          </div>
+
+          <!-- Back -->
+          <div class="flip-back">
+            <div class="flip-back-content">
+              <h3><%= d.name %></h3>
+              <p class="flip-desc"><%= d.desc %></p>
+              <div class="flip-meta">
+                <span>🌤 <%= d.bestTime %></span>
+              </div>
+              <div class="flip-tags">
+                <% d.tags.forEach(function(t){ %><span class="flip-tag"><%= t %></span><% }); %>
+              </div>
+              <span class="flip-cta">Plan Trip →</span>
+            </div>
+          </div>
+          </div><!-- /.flip-card-inner -->
+
+          <!-- Wishlist button -->
+          <button class="wishlist-btn" data-id="<%= d.id %>" data-name="<%= d.name %>" data-img="<%= meta.img %>" data-tagline="<%= d.tagline %>" aria-label="Save to wishlist">♡</button>
+        </a>
+      <% }); %>
+    </div>
+  </section>
+
+  <!-- ── Why GoTrip ──────────────────────────────────── -->
+  <section class="why-section">
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">🗓️</div>
+        <h3>Smart Itineraries</h3>
+        <p>Generate day-by-day travel plans for any number of days.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">💸</div>
+        <h3>Best Fares</h3>
+        <p>Compare dummy flight, hotel and bus prices in one place.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🤖</div>
+        <h3>AI Chatbot</h3>
+        <p>Ask our chatbot anything — flights, hotels, itineraries.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">📱</div>
+        <h3>Works Everywhere</h3>
+        <p>Fully responsive across desktop, tablet and mobile.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Traveller Reviews ─────────────────────────── -->
+  <section class="reviews-section">
+    <div class="dest-header">
+      <h2>What Travellers Say</h2>
+      <p>Real experiences from fellow explorers</p>
+    </div>
+    <div class="reviews-carousel" id="reviewsCarousel">
+      <div class="reviews-track" id="reviewsTrack">
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"GoTrip made planning our Rajasthan trip effortless. The 10-day itinerary was spot on — every recommendation was worth it!"</p>
+          <div class="review-author"><span class="review-avatar">👩</span><div><strong>Priya Sharma</strong><span>Delhi → Jaipur & Udaipur</span></div></div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"Found the perfect Ladakh itinerary here. The travel options section saved us hours of research. Absolutely premium experience!"</p>
+          <div class="review-author"><span class="review-avatar">👨</span><div><strong>Rahul Nair</strong><span>Bengaluru → Ladakh</span></div></div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★☆</div>
+          <p class="review-text">"The destination cards are gorgeous and the flip feature gives all the info I need at a glance. Booked Goa within minutes!"</p>
+          <div class="review-author"><span class="review-avatar">👩</span><div><strong>Aisha Khan</strong><span>Mumbai → Goa</span></div></div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"Never knew about Kaziranga until GoTrip's Hidden Gem badge caught my eye. Best wildlife trip of my life. Rhinoceros up close!"</p>
+          <div class="review-author"><span class="review-avatar">👨</span><div><strong>Suresh Patel</strong><span>Ahmedabad → Kaziranga</span></div></div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"The AI chatbot answered all my Kerala backwater queries instantly. Felt like having a personal travel agent. Loved the dark mode too!"</p>
+          <div class="review-author"><span class="review-avatar">👩</span><div><strong>Meera Iyer</strong><span>Chennai → Kerala</span></div></div>
+        </div>
+        <div class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"Saved 8 destinations to my wishlist and planned 3 trips in one evening. The itinerary builder is incredibly intuitive and detailed."</p>
+          <div class="review-author"><span class="review-avatar">👨</span><div><strong>Arjun Mehta</strong><span>Kolkata → Northeast India</span></div></div>
+        </div>
+      </div>
+      <button class="review-nav review-prev" id="reviewPrev">‹</button>
+      <button class="review-nav review-next" id="reviewNext">›</button>
+    </div>
+    <div class="reviews-counter">
+      <span class="live-dot"></span> <strong id="visitorCount">2,847</strong> travellers explored GoTrip this month
+    </div>
+  </section>
+
+  <!-- ── Wishlist Section ──────────────────────────── -->
+  <section class="wishlist-section" id="wishlist-section">
+    <div class="dest-header">
+      <h2>❤️ My Saved Trips</h2>
+      <p id="wishlistSubtitle">Save destinations by clicking the heart on any card</p>
+    </div>
+    <div class="dest-grid wishlist-grid" id="wishlistGrid">
+      <div class="wishlist-empty" id="wishlistEmpty">
+        <div class="wishlist-empty__icon">🗺️</div>
+        <p>No saved destinations yet.<br>Click ♡ on any card to save it here.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="/home.js"></script>
+<%- include('../partials/foot', { hideDefaultHeader: true, isHome: true }) %>

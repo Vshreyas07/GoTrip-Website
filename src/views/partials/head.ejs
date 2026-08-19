@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1e3a5f" />
+    <title><%= title %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/premium.css" />
+    <% if (typeof stylesheets !== 'undefined' && Array.isArray(stylesheets) && stylesheets.length) { %>
+      <% stylesheets.forEach(function (href) { %>
+        <link rel="stylesheet" href="<%= href %>" />
+      <% }); %>
+    <% } %>
+  </head>
+  <body class="page-transitioning <%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+    <!-- ── Loading Screen (rendered first to avoid content flash) ──── -->
+    <div class="loading-screen" id="loadingScreen">
+      <img src="/img/Gotrip.png" alt="" class="loading-logo-img" />
+      <div class="loading-logo">GoTrip</div>
+      <div class="loading-spinner"></div>
+      <p class="loading-tagline">Discovering India for you…</p>
+    </div>
+
+    <!-- Page-load progress bar — renders on first paint, no blank flash -->
+    <div class="page-load-bar" aria-hidden="true"></div>
+
+    <% if (typeof hideDefaultHeader === 'undefined' || !hideDefaultHeader) { %>
+    <header class="header">
+      <div class="container header__inner">
+        <a class="brand" href="/"><img src="/img/Gotrip.png" alt="GoTrip" class="brand-logo" /><span class="brand-text">GoTrip</span></a>
+        <nav class="nav" id="mainNav">
+          <a href="/flights" class="<%= typeof isFlights !== 'undefined' && isFlights ? 'active' : '' %>">✈ Flights</a>
+          <a href="/hotels" class="<%= typeof isHotels !== 'undefined' && isHotels ? 'active' : '' %>">🏨 Hotels</a>
+          <a href="/buses" class="<%= typeof isBuses !== 'undefined' && isBuses ? 'active' : '' %>">🚌 Buses</a>
+          <a href="/itinerary" class="<%= typeof isItinerary !== 'undefined' && isItinerary ? 'active' : '' %>">🗺 Itinerary</a>
+        </nav>
+        <div class="header__actions">
+          <button class="dark-toggle" id="darkToggle" aria-label="Toggle dark mode">
+            <span id="darkToggleIcon">🌙</span>
+          </button>
+          <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container main">
+    <% } %>

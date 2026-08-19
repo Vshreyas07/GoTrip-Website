@@ -1,0 +1,125 @@
+    <% if (typeof hideDefaultHeader === 'undefined' || !hideDefaultHeader) { %>
+    </main>
+    <% } %>
+
+    <!-- ── Mobile Bottom Nav ──────────────────────────────────────── -->
+    <nav class="mobile-bottom-nav">
+      <a href="/" class="mbn-item <%= typeof isHome !== 'undefined' && isHome ? 'active' : '' %>">
+        <span class="mbn-icon">🏠</span>
+        <span class="mbn-label">Home</span>
+      </a>
+      <a href="/flights" class="mbn-item <%= typeof isFlights !== 'undefined' && isFlights ? 'active' : '' %>">
+        <span class="mbn-icon">✈️</span>
+        <span class="mbn-label">Flights</span>
+      </a>
+      <a href="/hotels" class="mbn-item <%= typeof isHotels !== 'undefined' && isHotels ? 'active' : '' %>">
+        <span class="mbn-icon">🏨</span>
+        <span class="mbn-label">Hotels</span>
+      </a>
+      <a href="/itinerary" class="mbn-item <%= typeof isItinerary !== 'undefined' && isItinerary ? 'active' : '' %>">
+        <span class="mbn-icon">🗺️</span>
+        <span class="mbn-label">Itinerary</span>
+      </a>
+      <button class="mbn-item mbn-wishlist-btn" id="mbnWishlistBtn" aria-label="My Saved Trips">
+        <span class="mbn-icon mbn-heart-icon">♡</span>
+        <span class="mbn-label">Saved</span>
+        <span class="mbn-wishlist-badge" id="mbnWishlistBadge"></span>
+      </button>
+    </nav>
+
+    <!-- ── Back to Top ────────────────────────────────────────────── -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top" title="Back to top">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3L3 12h4.5v5h5v-5H17L10 3z" fill="currentColor"/></svg>
+    </button>
+
+    <!-- ── Premium Footer ─────────────────────────────────────── -->
+    <footer class="site-footer">
+      <div class="footer-glow" aria-hidden="true"></div>
+      <div class="footer-inner container">
+        <div class="footer-grid">
+          <div class="footer-brand-col">
+            <a href="/" class="footer-brand"><img src="/img/Gotrip.png" alt="GoTrip" class="footer-brand-logo" /><span>GoTrip</span></a>
+            <p class="footer-tagline">Discover the beauty of Incredible India — flights, hotels, buses &amp; curated itineraries, all in one place.</p>
+            <div class="footer-socials">
+              <a href="#" class="footer-social" aria-label="Twitter">𝕏</a>
+              <a href="#" class="footer-social" aria-label="Instagram">📷</a>
+              <a href="#" class="footer-social" aria-label="YouTube">▶</a>
+              <a href="#" class="footer-social" aria-label="LinkedIn">in</a>
+            </div>
+          </div>
+          <div class="footer-links-col">
+            <h4>Explore</h4>
+            <ul>
+              <li><a href="/flights">✈ Flights</a></li>
+              <li><a href="/hotels">🏨 Hotels</a></li>
+              <li><a href="/buses">🚌 Buses</a></li>
+              <li><a href="/itinerary">🗺 Itinerary Planner</a></li>
+            </ul>
+          </div>
+          <div class="footer-links-col">
+            <h4>Top Destinations</h4>
+            <ul>
+              <li><a href="/destination/goa">Goa</a></li>
+              <li><a href="/destination/kerala">Kerala</a></li>
+              <li><a href="/destination/ladakh">Ladakh</a></li>
+              <li><a href="/destination/jaipur">Jaipur</a></li>
+              <li><a href="/destination/varanasi">Varanasi</a></li>
+            </ul>
+          </div>
+          <div class="footer-links-col">
+            <h4>Company</h4>
+            <ul>
+              <li><a href="#">About GoTrip</a></li>
+              <li><a href="#">Careers</a></li>
+              <li><a href="#">Press</a></li>
+              <li><a href="#">Privacy Policy</a></li>
+              <li><a href="#">Terms of Service</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2026 GoTrip. All rights reserved. Made with ❤️ for India.</p>
+          <div class="footer-trust">
+            <span>🔒 SSL Secured</span>
+            <span>✅ PCI Compliant</span>
+            <span>🛡️ GDPR Ready</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/book.js"></script>
+    <script src="/chat.js"></script>
+    <script src="/premium.js"></script>
+    <script>
+      // Hamburger menu toggle
+      (function(){
+        var btn = document.getElementById('hamburgerBtn');
+        var nav = document.getElementById('mainNav');
+        if(btn && nav){
+          btn.addEventListener('click', function(){
+            btn.classList.toggle('active');
+            nav.classList.toggle('open');
+            btn.setAttribute('aria-expanded', nav.classList.contains('open'));
+          });
+          // Close on nav link click
+          nav.querySelectorAll('a').forEach(function(a){
+            a.addEventListener('click', function(){
+              btn.classList.remove('active');
+              nav.classList.remove('open');
+              btn.setAttribute('aria-expanded','false');
+            });
+          });
+          // Close on outside click
+          document.addEventListener('click', function(e){
+            if(!btn.contains(e.target) && !nav.contains(e.target)){
+              btn.classList.remove('active');
+              nav.classList.remove('open');
+              btn.setAttribute('aria-expanded','false');
+            }
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,114 @@
+<%- include('../partials/head', { title, isItinerary: true }) %>
+
+<!-- ── Hero Banner ──────────────────────────────────────── -->
+<div class="itin-hero">
+  <span class="itin-hero-icon">🗺️</span>
+  <h1>Plan Your Dream Trip</h1>
+  <p>Pick a destination, your starting city and number of days — we'll build your perfect itinerary.</p>
+</div>
+
+<!-- ── Filter Form ──────────────────────────────────────── -->
+<form class="itin-filter" method="get" action="/itinerary">
+  <div class="field">
+    <label for="from">🏙️ Travelling From</label>
+    <input id="from" name="from" type="text" list="city-list"
+           value="<%= from %>"
+           placeholder="e.g. Hyderabad, Bengaluru, Mumbai…"
+           autocomplete="off" />
+    <datalist id="city-list">
+      <% destinations.forEach(function(d) { %><option value="<%= d.name %>"><% }); %>
+      <option value="Delhi"><option value="Mumbai"><option value="Bengaluru">
+      <option value="Hyderabad"><option value="Chennai"><option value="Kolkata">
+      <option value="Pune"><option value="Jaipur"><option value="Ahmedabad">
+    </datalist>
+  </div>
+  <div class="field">
+    <label for="destination">📍 Destination</label>
+    <select id="destination" name="destination" required>
+      <option value="" disabled <%= destination ? '' : 'selected' %>>Select destination</option>
+      <% destinations.forEach(function(d) { %>
+        <option value="<%= d.name %>" <%= destination && d.name.toLowerCase() === destination.toLowerCase() ? 'selected' : '' %>><%= d.name %></option>
+      <% }); %>
+    </select>
+  </div>
+  <div class="field">
+    <label for="days">📅 Days (max 10)</label>
+    <input id="days" name="days" type="number" min="1" max="10" value="<%= days %>" placeholder="3" required />
+  </div>
+  <button class="btn" type="submit">🚀 Generate Itinerary</button>
+  <a class="btn btn--ghost" href="/itinerary">✕ Reset</a>
+</form>
+
+<% if (itinerary) { %>
+  <section class="section">
+    <h2><%= itinerary.destination %> — <%= itinerary.days %>-Day Itinerary
+      <% if (from) { %><span class="itin-from-badge">from <%= from %></span><% } %>
+    </h2>
+
+    <% if (itinerary.travelOptions && itinerary.travelOptions.length) { %>
+    <div class="travel-options">
+      <h3>🚀 How to Get There
+        <% if (from) { %><span class="topt-from-label">from <%= from %></span><% } %>
+      </h3>
+      <div class="travel-options__grid">
+        <% itinerary.travelOptions.forEach(function(opt) { %>
+          <div class="topt-card">
+            <div class="topt-mode"><%= opt.mode %></div>
+            <div class="topt-from">From <strong><%= opt.from %></strong></div>
+            <div class="topt-row">
+              <span class="topt-duration">⏱ <%= opt.duration %></span>
+              <span class="topt-price">₹ <%= opt.cheapestINR.toLocaleString() %>+</span>
+            </div>
+            <div class="topt-note"><%= opt.note %></div>
+          </div>
+        <% }); %>
+      </div>
+      <% if (from && itinerary.allTravelOptions && itinerary.allTravelOptions.length > itinerary.travelOptions.length) { %>
+        <p class="itin-more-link">
+          <a href="/itinerary?destination=<%= itinerary.destination %>&days=<%= itinerary.days %>">View all travel options (no filter)</a>
+        </p>
+      <% } %>
+    </div>
+    <% } else if (itinerary.allTravelOptions && itinerary.allTravelOptions.length) { %>
+    <div class="travel-options">
+      <h3 class="travel-options__title">🚀 How to Get There</h3>
+      <p class="itin-no-match">No direct routes found from <strong><%= from %></strong>. Showing all available options:</p>
+      <div class="travel-options__grid">
+        <% itinerary.allTravelOptions.forEach(function(opt) { %>
+          <div class="topt-card">
+            <div class="topt-mode"><%= opt.mode %></div>
+            <div class="topt-from">From <strong><%= opt.from %></strong></div>
+            <div class="topt-row">
+              <span class="topt-duration">⏱ <%= opt.duration %></span>
+              <span class="topt-price">₹ <%= opt.cheapestINR.toLocaleString() %>+</span>
+            </div>
+            <div class="topt-note"><%= opt.note %></div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+    <% } %>
+
+    <div class="itinerary">
+      <% itinerary.daysPlan.forEach(function(d) { %>
+        <div class="itinerary__day">
+          <h3><%= d.title %></h3>
+          <ul>
+            <% d.items.forEach(function(item) { %>
+              <li><%= item %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% }); %>
+    </div>
+  </section>
+<% } else { %>
+    <div class="itin-empty">
+      <div class="itin-empty-icon">🗺</div>
+      <h3 class="itin-empty-title">Ready to explore?</h3>
+      <p class="itin-empty-text">Fill in the form above and click <strong>Generate Itinerary</strong> to see your personalised day-by-day trip plan with travel options.</p>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/foot', { isItinerary: true }) %>

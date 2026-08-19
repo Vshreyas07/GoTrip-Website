@@ -1,0 +1,20 @@
+{
+  "name": "gotrip",
+  "version": "1.0.0",
+  "description": "Dummy travel booking website (flights, hotels, buses) with itinerary generator and chatbot.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.2"
+  }
+}

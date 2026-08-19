@@ -1,0 +1,68 @@
+<%- include('../partials/head', { title, isHotels: true }) %>
+
+<!-- ── Hero Banner ──────────────────────────────────────── -->
+<div class="hotels-hero">
+  <span class="hotels-hero-icon">🏨</span>
+  <h1>Find Your Perfect Stay</h1>
+  <p>Handpicked hotels across India — from budget-friendly to luxury retreats</p>
+</div>
+
+<!-- ── Filter Bar ───────────────────────────────────────── -->
+<form class="hotels-filter" method="get" action="/hotels">
+  <div class="field">
+    <label for="city">🏙️ City</label>
+    <select id="city" name="city">
+      <option value="">All Destinations</option>
+      <% destinations.forEach((d) => { %>
+        <option value="<%= d.name %>" <%= city && d.name.toLowerCase() === city.toLowerCase() ? 'selected' : '' %>><%= d.name %></option>
+      <% }) %>
+    </select>
+  </div>
+  <button class="btn" type="submit">🔍 Search Hotels</button>
+  <a class="btn btn--ghost" href="/hotels">✕ Reset</a>
+</form>
+
+<!-- ── Hotel Cards ──────────────────────────────────────── -->
+<% if (!hotels.length) { %>
+  <div class="hotels-empty">
+    <span class="hotels-empty-icon">🏨</span>
+    <h3 class="hotels-empty__title">No hotels found</h3>
+    <p>Try a different city or <a href="/hotels" class="hotels-empty__link">view all hotels</a>.</p>
+  </div>
+<% } else { %>
+<div class="hotels-grid">
+  <% hotels.forEach((h, idx) => {
+    var stars = '';
+    for (var s = 0; s < Math.round(h.rating); s++) stars += '★';
+    for (var s = Math.round(h.rating); s < 5; s++) stars += '☆';
+    var hotelEmojis = ['🏛️','🏰','🌴','🏖️','🌄','🏔️','🌺','🪷'];
+    var emoji = hotelEmojis[idx % hotelEmojis.length];
+  %>
+  <div class="hotel-card" style="animation-delay:<%= (idx % 12) * 0.05 %>s">
+    <div class="hotel-card-img">
+      <% if (h.img) { %>
+        <img src="<%= h.img %>" alt="<%= h.name %>" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+        <span style="display:none"><%= emoji %></span>
+      <% } else { %>
+        <span><%= emoji %></span>
+      <% } %>
+      <span class="hotel-card-rating-badge">⭐ <%= h.rating %></span>
+    </div>
+    <div class="hotel-card-body">
+      <div class="hotel-card-city"><%= h.city %></div>
+      <div class="hotel-card-name"><%= h.name %></div>
+      <div class="hotel-card-stars"><%= stars %></div>
+      <div class="hotel-card-footer">
+        <div class="hotel-card-price">
+          <strong>₹ <%= h.pricePerNightINR.toLocaleString() %></strong>
+          <small>per night</small>
+        </div>
+        <button class="hotel-book-btn js-book" type="button" data-kind="Hotel" data-id="<%= h.id %>">Book Now</button>
+      </div>
+    </div>
+  </div>
+  <% }) %>
+</div>
+<% } %>
+
+<%- include('../partials/foot', { isHotels: true }) %>

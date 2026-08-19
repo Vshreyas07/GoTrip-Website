@@ -1,0 +1,172 @@
+<%- include('../partials/head', { title, isBuses: true }) %>
+
+<!-- ── Hero Banner ──────────────────────────────────────── -->
+<div class="buses-hero">
+  <span class="buses-hero-icon">🚌</span>
+  <h1>Book Your Bus Journey</h1>
+  <p>Comfortable and affordable bus travel across India — AC, Sleeper &amp; Volvo</p>
+</div>
+
+<!-- ── Filter Bar ───────────────────────────────────────── -->
+<form class="buses-filter" method="get" action="/buses">
+  <div class="field">
+    <label for="from">🏙️ From</label>
+    <input id="from" name="from" value="<%= from %>" placeholder="e.g. Delhi, Mumbai…" />
+  </div>
+  <div class="field">
+    <label for="to">📍 To</label>
+    <input id="to" name="to" value="<%= to %>" placeholder="e.g. Agra, Jaipur…" />
+  </div>
+  <button class="btn" type="submit">🔍 Search Buses</button>
+  <a class="btn btn--ghost" href="/buses">✕ Reset</a>
+</form>
+
+<!-- ── Results count ────────────────────────────────────── -->
+<div class="fsr-count fsr-count--mb">
+  Showing <strong><%= buses.length %></strong> bus<%= buses.length !== 1 ? 'es' : '' %>
+  <% if (from) { %> from <strong><%= from %></strong><% } %>
+  <% if (to) { %> to <strong><%= to %></strong><% } %>
+</div>
+
+<!-- ── Bus Cards ────────────────────────────────────────── -->
+<% if (!buses.length) { %>
+  <div class="buses-empty">
+    <span class="buses-empty-icon">🚌</span>
+    <h3 class="buses-empty__title">No buses found</h3>
+    <p>Try a different route or <a href="/buses" class="buses-empty__link">view all buses</a>.</p>
+  </div>
+<% } else { %>
+<% const busLogoMap = {
+  /* ── Government / State RTCs ── */
+  "UPSRTC":                    "/img/buses/upsrtc.png",
+  "RSRTC":                     "/img/buses/rsrtc.png",
+  "HRTC":                      "/img/buses/hrtc.png",
+  "KSRTC (Karnataka)":         "/img/buses/ksrtc.png",
+  "KSRTC (Kerala)":            "/img/buses/ksrtc-kerala.png",
+  "APSRTC Garuda":             "/img/buses/apsrtc.png",
+  "APSRTC Express":            "/img/buses/apsrtc-express.png",
+  "GSRTC":                     "/img/buses/gsrtc.png",
+  "KTCL (Kadamba)":            "/img/buses/ktcl.png",
+  "ASTC Deluxe":               "/img/buses/astc.png",
+  "ASTC Express":              "/img/buses/astc.png",
+  "NBSTC":                     "/img/buses/nbstc.png",
+  "SBSTC":                     "/img/buses/sbstc.png",
+  "WBTC (CTC)":                "/img/buses/wbtc.png",
+  "OSRTC":                     "/img/buses/osrtc.png",
+  "OSRTC Express":             "/img/buses/osrtc.png",
+  "TNSTC Express":             "/img/buses/tnstc.png",
+  "TNSTC Deluxe":              "/img/buses/tnstc.png",
+  "TNSTC Ultra":               "/img/buses/tnstc-ultra.png",
+  "TNSTC Sleeper":             "/img/buses/tnstc-sleeper.png",
+  "SNT (Sikkim)":              "/img/buses/snttransport.png",
+  "PEPSU":                     "/img/buses/pepsu.png",
+  "HPTDC Volvo":               "/img/buses/hptdc.png",
+  "Meghalaya Transport (MTC)": "/img/buses/mtc.png",
+  "APSARA Bus Service":        "/img/buses/apsara.png",
+  "GMOU":                      "/img/buses/gmou.png",
+  /* ── Tech / Intercity aggregators ── */
+  "NueGo":                     "/img/buses/nuego.png",
+  "FlixBus":                   "/img/buses/flixbus.png",
+  "IntrCity SmartBus":         "/img/buses/intrcity.png",
+  "zingbus":                   "/img/buses/zingbus.png",
+  "FRESHBUS":                  "/img/buses/freshbus.png",
+  /* ── Private operators ── */
+  "VRL Travels":               "/img/buses/vrl.png",
+  "Neeta Tours":               "/img/buses/neeta.png",
+  "Kallada Travels":           "/img/buses/kallada.png",
+  "Raj Kalpana Travels":       "/img/buses/rajkalpana.png",
+  "Bedi Travels":              "/img/buses/bedi.png",
+  "Laxmi Holidays":            "/img/buses/laxmiholidays.png",
+  "Gola Bus Service":          "/img/buses/golabus.png",
+  "Mahalaxmi Travels":         "/img/buses/mahalaxmi.png",
+  "Jain Travels Regd":         "/img/buses/jaintravels.png",
+  "M R Travels":               "/img/buses/mrtravels.png",
+  "Eagle Falcon Bus":          "/img/buses/eaglefalcon.png",
+  "Rajdhani Travels":          "/img/buses/rajdhani.png",
+  "Prasanna Purple":           "/img/buses/prasannapurple.png",
+  "Shrinath Solitaire":        "/img/buses/shrinath.png",
+  "Patel Eagle Travels":       "/img/buses/pateleagle.png",
+  "Patel Travels":             "/img/buses/pateltravels.png",
+  "Express Line":              "/img/buses/expressline.png",
+  "Royal Cruiser":             "/img/buses/royalcruiser.png",
+  "Shyamoli Paribahan":        "/img/buses/shyamoli.png",
+  "Pradhan":                   "/img/buses/pradhan.png",
+  "Chartered Speed Ltd":       "/img/buses/charteredspeed.png",
+  "KBS Luxury Bus":            "/img/buses/kbs.png",
+  "GreenLine Travels":         "/img/buses/greenline.png",
+  "MMK Travels":               "/img/buses/mmk.png",
+  "Mayura Bus":                "/img/buses/mayura.png",
+  "Jabbar Travels":            "/img/buses/jabbar.png",
+  "KSM Roadways":              "/img/buses/ksm.png",
+  "Sea Bird Tourist":          "/img/buses/seabird.png",
+  "Rathimeena Travels":        "/img/buses/rathimeena.png",
+  "PARVEEN TRAVELS":           "/img/buses/parveen.png",
+  "National Travels CHN":      "/img/buses/nationalchennai.png",
+  "National Travels":          "/img/buses/national.png",
+  "V Kaveri Travels":          "/img/buses/vkaveri.png",
+  "Orange Tours":              "/img/buses/orangetours.png",
+  "SHARMA TRANSPORTS":         "/img/buses/sharma.png",
+  "Sugama Tourist":            "/img/buses/sugama.png",
+  "KPN Travels":               "/img/buses/kpn.png",
+  "Green Valley":              "/img/buses/greenvalley.png",
+  /* ── Ferry / Ship operators ── */
+  "Lakshadweep Ship":          "/img/buses/lakshadweep.png",
+  "Shipping Corp Ship":        "/img/buses/shippingcorp.png",
+}; %>
+<div class="buses-grid">
+  <% buses.forEach((b, idx) => {
+    var busLogo = busLogoMap[b.operator] || null;
+  %>
+  <div class="bus-card" style="animation-delay:<%= (idx % 15) * 0.04 %>s">
+
+    <!-- Operator -->
+    <div class="bc-operator">
+      <div class="bc-operator-icon">
+        <% if (busLogo) { %>
+          <img src="<%= busLogo %>" alt="<%= b.operator %>" class="bc-operator-logo"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+          <span style="display:none">🚌</span>
+        <% } else { %>
+          🚌
+        <% } %>
+      </div>
+      <div class="bc-operator-name"><%= b.operator %></div>
+      <div class="bc-operator-id"><%= b.id %></div>
+    </div>
+
+    <!-- Route -->
+    <div class="bc-route">
+      <div class="bc-city">
+        <div class="bc-city-time"><%= b.depart %></div>
+        <div class="bc-city-name"><%= b.from %></div>
+      </div>
+      <div class="bc-mid">
+        <div class="bc-duration">⏱ Direct</div>
+        <div class="bc-line-wrap">
+          <div class="bc-line"></div>
+          <span class="bc-bus-icon">🚌</span>
+          <div class="bc-line"></div>
+        </div>
+        <div class="bc-type">AC Sleeper</div>
+      </div>
+      <div class="bc-city bc-city--end">
+        <div class="bc-city-time"><%= b.arrive %></div>
+        <div class="bc-city-name"><%= b.to %></div>
+      </div>
+    </div>
+
+    <!-- Price & Book -->
+    <div class="bc-cta">
+      <div>
+        <div class="bc-price"><sup>₹</sup><%= b.priceINR.toLocaleString() %></div>
+        <div class="bc-price-note">per person</div>
+      </div>
+      <button class="bc-book-btn js-book" type="button" data-kind="Bus" data-id="<%= b.id %>">Book Now</button>
+    </div>
+
+  </div>
+  <% }) %>
+</div>
+<% } %>
+
+<%- include('../partials/foot', { isBuses: true }) %>

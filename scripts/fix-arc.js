@@ -1,0 +1,10 @@
+﻿const fs = require('fs');
+let c = fs.readFileSync('src/views/pages/flights.ejs', 'utf8');
+const eol = c.includes('\r\n') ? '\r\n' : '\n';
+const pl = '\u2708';
+const OLD = ['            <div class="fc-line-wrap">','              <div class="fc-line"></div>','              <span class="fc-plane-icon">'+pl+'</span>','              <div class="fc-line"></div>','            </div>'].join(eol);
+const ARC = ['            <div class="fc-arc-wrap">','              <svg class="fc-arc-svg" viewBox="0 0 120 36" fill="none" aria-hidden="true">','                <path class="fc-arc-path" d="M6 30 Q60 2 114 30" stroke-width="1.5" fill="none"/>','                <circle class="fc-arc-dot" cx="6" cy="30" r="3"/>','                <circle class="fc-arc-dot" cx="114" cy="30" r="3"/>','                <text class="fc-arc-plane" x="60" y="12" text-anchor="middle" font-size="13">'+pl+'</text>','              </svg>','            </div>'].join(eol);
+const n = c.split(OLD).length-1;
+c = c.split(OLD).join(ARC);
+fs.writeFileSync('src/views/pages/flights.ejs', c, 'utf8');
+console.log('replaced:',n,'eol:',JSON.stringify(eol));
