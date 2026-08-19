@@ -103,14 +103,13 @@
             btn.setAttribute('aria-expanded', nav.classList.contains('open'));
           });
           // Close on nav link click
-          var navLinks = nav.querySelectorAll('a');
-          for (var i = 0; i < navLinks.length; i++) {
-            navLinks[i].addEventListener('click', function(){
+          nav.querySelectorAll('a').forEach(function(a){
+            a.addEventListener('click', function(){
               btn.classList.remove('active');
               nav.classList.remove('open');
               btn.setAttribute('aria-expanded','false');
             });
-          }
+          });
           // Close on outside click
           document.addEventListener('click', function(e){
             if(!btn.contains(e.target) && !nav.contains(e.target)){

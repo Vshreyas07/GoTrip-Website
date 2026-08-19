@@ -19,47 +19,6 @@ body.page-transitioning {
   display: none;
 }
 
-/* ── Mobile / low-power smoothness overrides ─────────── */
-@media (max-width: 768px), (pointer: coarse), (prefers-reduced-motion: reduce) {
-  .loading-screen {
-    transition: opacity 0.22s ease, visibility 0.22s ease;
-  }
-
-  .flight-card,
-  .hotel-card,
-  .bus-card,
-  .itinerary__day,
-  .review-card,
-  .dest-card,
-  .why-card {
-    animation: none !important;
-    transition-duration: 0.16s !important;
-  }
-
-  .fc-arc-plane,
-  .flights-hero-icon,
-  .loading-logo-img,
-  .loading-logo,
-  .particles span,
-  .slide,
-  .typewriter-cursor {
-    animation: none !important;
-  }
-
-  .mobile-bottom-nav,
-  .header,
-  .cinema-nav,
-  .hero-search-glass,
-  .wishlist-section {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-}
-
-html.mobile-lite {
-  scroll-behavior: auto;
-}
-
 /* ── 4. Loading Screen ─────────────────────────────────── */
 .loading-screen {
   position: fixed;
