@@ -2,6 +2,41 @@
   GoTrip — premium.js
    ══════════════════════════════════════════════════════════ */
 
+function forEachNode(list, cb) {
+  if (!list || typeof cb !== 'function') return;
+  for (var i = 0; i < list.length; i++) cb(list[i], i);
+}
+
+function getStorageItemSafe(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    return null;
+  }
+}
+
+function setStorageItemSafe(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* ── 0. Mobile Lite Mode ───────────────────────────────── */
+(function initMobileLiteMode() {
+  var isCoarse = false;
+  try {
+    isCoarse = !!(window.matchMedia && window.matchMedia('(max-width: 768px), (pointer: coarse)').matches);
+  } catch (e) {
+    isCoarse = window.innerWidth <= 768;
+  }
+  if (isCoarse) {
+    document.documentElement.classList.add('mobile-lite');
+  }
+})();
+
 /* ── 1. Loading Screen ─────────────────────────────────── */
 (function initLoadingScreen() {
   const screen = document.getElementById('loadingScreen');
@@ -9,13 +44,17 @@
   // Hide after images / DOM ready
   function hideLoader() {
     screen.classList.add('hidden');
-    document.querySelectorAll('.dest-card-skeleton').forEach(s => s.classList.add('loaded'));
+    forEachNode(document.querySelectorAll('.dest-card-skeleton'), function (s) {
+      s.classList.add('loaded');
+    });
   }
+  const isMobileLite = document.documentElement.classList.contains('mobile-lite');
+  const loaderDelay = isMobileLite ? 120 : 400;
   if (document.readyState === 'complete') {
-    setTimeout(hideLoader, 400);
+    setTimeout(hideLoader, loaderDelay);
   } else {
-    window.addEventListener('load', () => setTimeout(hideLoader, 400));
-    setTimeout(hideLoader, 2800); // hard cap
+    window.addEventListener('load', () => setTimeout(hideLoader, loaderDelay));
+    setTimeout(hideLoader, isMobileLite ? 1200 : 2800); // hard cap
   }
 })();
 
@@ -25,12 +64,12 @@
   const iconEl = document.getElementById('darkToggleIcon');
   const html = document.documentElement;
 
-  const stored = localStorage.getItem('gotrip-theme');
+  const stored = getStorageItemSafe('gotrip-theme');
   if (stored) html.setAttribute('data-theme', stored);
 
   function apply(theme) {
     html.setAttribute('data-theme', theme);
-    localStorage.setItem('gotrip-theme', theme);
+    setStorageItemSafe('gotrip-theme', theme);
     if (iconEl) iconEl.textContent = theme === 'dark' ? '☀️' : '🌙';
     if (btn) btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode');
   }
@@ -117,7 +156,10 @@
       return {
         id:     c.dataset.id,
         name:   c.dataset.name,
-        region: c.querySelector('.dest-region-badge')?.textContent || '',
+        region: (function () {
+          const badge = c.querySelector('.dest-region-badge');
+          return badge ? badge.textContent : '';
+        })(),
         img
       };
     });
@@ -188,11 +230,14 @@
 
 /* ── 6. Wishlist (localStorage) ────────────────────────── */
 window.getWishlist = function() {
-  try { return JSON.parse(localStorage.getItem('gotrip-wishlist') || '[]'); }
-  catch { return []; }
+  try {
+    return JSON.parse(getStorageItemSafe('gotrip-wishlist') || '[]');
+  } catch (e) {
+    return [];
+  }
 };
 window.saveWishlist = function(list) {
-  localStorage.setItem('gotrip-wishlist', JSON.stringify(list));
+  setStorageItemSafe('gotrip-wishlist', JSON.stringify(list));
 };
 
 window.toggleWishlist = function(btn, evt) {
@@ -465,7 +510,7 @@ window.showToast = function(message) {
 
 /* ── 13. Flip card aria-labels ─────────────────────────── */
 (function initFlipCardAria() {
-  document.querySelectorAll('.flip-card').forEach(card => {
+  forEachNode(document.querySelectorAll('.flip-card'), function (card) {
     const name = card.dataset.name || 'destination';
     card.setAttribute('aria-label', `${name} — hover to see details, click to explore`);
   });
